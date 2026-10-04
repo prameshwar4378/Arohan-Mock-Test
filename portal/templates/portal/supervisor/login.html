@@ -1,0 +1,112 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Supervisor Login | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.08) 0%, rgba(15, 23, 42, 0.04) 90%);
+    }
+
+    .login-card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.1);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        width: 100%;
+        max-width: 460px;
+    }
+
+    .login-header-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        color: #ffffff;
+        padding: 2.25rem 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .login-icon-badge {
+        width: 74px;
+        height: 74px;
+        background: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-control-custom {
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        border: 1.5px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control-custom:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container py-5 px-3">
+    <div class="login-card">
+        
+        <!-- Header Banner -->
+        <div class="login-header-banner">
+            <div class="login-icon-badge">
+                <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" style="height: 100%; width: 100%; object-fit: contain;">
+            </div>
+            <h3 class="fw-bold mb-1">Supervisor Portal</h3>
+            <p class="text-light opacity-90 small mb-0 fw-semibold">Arohan Academy English School</p>
+            <div class="text-warning small mt-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">EXECUTIVE ADMINISTRATION ACCESS</div>
+        </div>
+
+        <!-- Login Form Body -->
+        <div class="p-4 p-md-5">
+            <form method="POST" action="{% url 'portal:supervisor_login' %}">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">
+                        <i class="fa-solid fa-user text-primary me-1"></i> Supervisor Username
+                    </label>
+                    {{ form.username }}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small d-flex justify-content-between">
+                        <span><i class="fa-solid fa-lock text-primary me-1"></i> Password</span>
+                    </label>
+                    <div class="position-relative">
+                        {{ form.password }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-arohan-primary btn-lg w-100 fw-bold py-3 shadow-sm mb-3">
+                    <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Log In to Dashboard
+                </button>
+            </form>
+
+            <div class="text-center pt-3 border-top">
+                <a href="{% url 'portal:index' %}" class="text-decoration-none text-muted small fw-semibold">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Return to Student Mock Portal
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

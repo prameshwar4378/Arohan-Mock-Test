@@ -1,0 +1,123 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Classes & Batches | Supervisor Center{% endblock %}
+{% block page_title %}Academic Classes & Batches{% endblock %}
+{% block page_subtitle %}Manage class batches, enrolled student rosters, and mock test assignments{% endblock %}
+
+{% block supervisor_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="badge bg-primary-subtle text-primary fw-bold">{{ classes|length }} Classes Active</span>
+    </div>
+    <button type="button" class="btn btn-arohan-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#createClassModal">
+        <i class="fa-solid fa-plus me-1"></i> Add New Class / Batch
+    </button>
+</div>
+
+<!-- Classes Grid -->
+<div class="row g-4 mb-4">
+    {% for c in classes %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card-custom p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary fw-bold">{{ c.code|default:"CLASS" }}</span>
+                        {% if c.is_active %}
+                            <span class="badge badge-soft-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-soft-danger">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">{{ c.name }}</h5>
+                    <p class="text-muted small mb-3">
+                        {{ c.description|default:"No description provided."|truncatechars:80 }}
+                    </p>
+                </div>
+
+                <div>
+                    <div class="row g-2 text-center p-2 bg-light rounded-3 mb-3 small">
+                        <div class="col-4">
+                            <span class="text-muted d-block" style="font-size:0.72rem;">Students</span>
+                            <strong class="text-primary fs-6">{{ c.student_count }}</strong>
+                        </div>
+                        <div class="col-4 border-start border-end">
+                            <span class="text-muted d-block" style="font-size:0.72rem;">Subjects</span>
+                            <strong class="text-success fs-6">{{ c.total_subjects }}</strong>
+                        </div>
+                        <div class="col-4">
+                            <span class="text-muted d-block" style="font-size:0.72rem;">Tests</span>
+                            <strong class="text-dark fs-6">{{ c.exam_count }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="{% url 'portal:supervisor_class_detail' c.id %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                            <i class="fa-solid fa-chalkboard me-1"></i> Manage Class &amp; Subjects
+                        </a>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'portal:supervisor_class_edit' c.id %}" class="btn btn-sm btn-light border" title="Edit Class">
+                                <i class="fa-solid fa-pen text-muted"></i>
+                            </a>
+                            <a href="{% url 'portal:supervisor_class_delete' c.id %}" class="btn btn-sm btn-light border text-danger" title="Delete Class">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded-3 border">
+                <i class="fa-solid fa-chalkboard text-muted fs-1 mb-3"></i>
+                <h6 class="fw-bold text-dark">No classes created yet</h6>
+                <p class="text-muted small mb-3">Click the button below to register your first class / batch.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createClassModal">
+                    + Add New Class
+                </button>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Modal: Create New Class -->
+<div class="modal fade" id="createClassModal" tabindex="-1" aria-labelledby="createClassModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="createClassModalLabel">
+                    <i class="fa-solid fa-chalkboard text-primary me-2"></i>Create New Class / Batch
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'portal:supervisor_classes' %}">
+                {% csrf_token %}
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Class / Batch Name *</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Short Code (e.g. C10-A)</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label small fw-semibold text-dark">Active Batch</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-arohan-primary btn-sm px-4 fw-bold">Create Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

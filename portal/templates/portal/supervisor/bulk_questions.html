@@ -1,0 +1,418 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Bulk Question Paper Importer | Supervisor Center{% endblock %}
+{% block page_title %}Bulk Question Paper Importer{% endblock %}
+{% block page_subtitle %}Add entire question papers in bulk via Smart Text Paste or CSV Upload{% endblock %}
+
+{% block supervisor_content %}
+
+<div class="row g-4">
+    
+    <!-- Left Column: Input Forms -->
+    <div class="col-lg-7">
+        <div class="card-custom p-4 bg-white mb-4">
+            
+            <!-- Nav Tabs -->
+            <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-3" id="bulkTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold py-2" id="smart-text-tab" data-bs-toggle="tab" data-bs-target="#smart-text" type="button" role="tab">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2 text-warning"></i>Smart Text Paste Parser
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-2" id="csv-upload-tab" data-bs-toggle="tab" data-bs-target="#csv-upload" type="button" role="tab">
+                        <i class="fa-solid fa-file-csv me-2 text-success"></i>CSV File Upload
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="bulkTabContent">
+                
+                <!-- TAB 1: SMART TEXT PASTE -->
+                <div class="tab-pane fade show active" id="smart-text" role="tabpanel">
+                    
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h6 class="fw-bold text-dark mb-0">Paste Raw Question Paper Text</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-info text-white fw-semibold" id="loadExistingQuestionsBtn" style="display: none;">
+                                <i class="fa-solid fa-cloud-arrow-down me-1"></i> <span id="loadExistingBtnText">Load Existing Questions</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="loadSampleTextBtn">
+                                <i class="fa-solid fa-copy me-1"></i> Load Sample Question Text
+                            </button>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{% url 'portal:supervisor_bulk_questions' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="preview_text">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark small">1. Select Target Mock Test / Exam</label>
+                            {{ text_form.exam }}
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-dark small">Default Marks</label>
+                                {{ text_form.default_marks }}
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-dark small">Default Negative Marks</label>
+                                {{ text_form.default_negative_marks }}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fw-bold text-dark small mb-0">2. Questions Text</label>
+                                <span id="questionCountBadge" class="badge bg-secondary-subtle text-secondary small fw-normal" style="display: none;"></span>
+                            </div>
+
+                            <!-- Alert when existing questions are detected / loaded -->
+                            <div id="examQuestionsNotice" class="alert alert-info py-2 px-3 small align-items-center justify-content-between mb-2 shadow-sm" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-circle-check text-info me-2 fs-6"></i>
+                                    <span id="examQuestionsNoticeMsg"></span>
+                                </div>
+                                <button type="button" class="btn-close btn-sm ms-2" id="closeNoticeBtn" aria-label="Close"></button>
+                            </div>
+
+                            {{ text_form.raw_text }}
+                            <div class="form-text small text-muted">
+                                <i class="fa-solid fa-circle-info me-1"></i> Paste your questions from Word, PDF, or text. The parser automatically extracts questions, 4 options, answers, and explanations.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Parse & Preview Questions
+                        </button>
+                    </form>
+
+                </div>
+
+                <!-- TAB 2: CSV FILE UPLOAD -->
+                <div class="tab-pane fade" id="csv-upload" role="tabpanel">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-dark mb-0">Upload Questions via CSV</h6>
+                        <a href="{% url 'portal:download_sample_question_csv' %}" class="btn btn-sm btn-outline-success">
+                            <i class="fa-solid fa-download me-1"></i> Download Sample CSV
+                        </a>
+                    </div>
+
+                    <form method="POST" action="{% url 'portal:supervisor_bulk_questions' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="upload_csv">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark small">Select Target Mock Test / Exam</label>
+                            {{ csv_form.exam }}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark small">Choose CSV File</label>
+                            {{ csv_form.csv_file }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload & Import Questions
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Right Column: Parsing Rules & Preview -->
+    <div class="col-lg-5">
+        
+        <!-- Format Rules Guide Card -->
+        <div class="card-custom p-4 bg-white mb-4">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-book-open text-primary me-2"></i>Smart Parser Format Guide
+            </h6>
+            <p class="small text-muted mb-3">
+                The smart parser automatically identifies questions and options using any standard numbering format:
+            </p>
+
+            <div class="bg-light p-3 rounded-3 border small font-monospace mb-3" style="font-size: 0.8rem;">
+                1. What is the unit of power?<br>
+                A) Watt<br>
+                B) Joule<br>
+                C) Newton<br>
+                D) Pascal<br>
+                Ans: A<br>
+                Explanation: Watt is the SI unit of power.<br>
+                Marks: 2.0<br>
+                Negative: 0.5<br><br>
+                2. Which planet is closest to the sun?<br>
+                A. Venus<br>
+                B. Mercury<br>
+                C. Mars<br>
+                D. Earth<br>
+                Answer: B<br>
+                Solution: Mercury is the innermost planet.
+            </div>
+
+            <ul class="small text-muted ps-3 mb-0">
+                <li class="mb-1"><strong>Questions:</strong> <code>1.</code>, <code>Q1.</code>, or <code>Question 1:</code></li>
+                <li class="mb-1"><strong>Options:</strong> <code>A)</code>, <code>A.</code>, <code>(A)</code> for A, B, C, D</li>
+                <li class="mb-1"><strong>Answers:</strong> <code>Answer: B</code>, <code>Ans: B</code>, <code>Key: B</code></li>
+                <li><strong>Explanations:</strong> <code>Explanation: ...</code> or <code>Solution: ...</code></li>
+            </ul>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- PREVIEW SECTION (Appears when questions are parsed) -->
+{% if preview_questions %}
+    <div class="card-custom p-4 bg-white mb-5 border-primary shadow-sm" id="previewSection">
+        
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pb-3 mb-4 border-bottom">
+            <div>
+                <span class="badge bg-success-subtle text-success fs-6 fw-bold px-3 py-1 mb-1">
+                    <i class="fa-solid fa-circle-check me-1"></i> {{ preview_questions|length }} Questions Parsed Successfully
+                </span>
+                <h4 class="fw-bold text-dark mb-0 mt-1">Review Questions for: {{ selected_exam.title }}</h4>
+            </div>
+
+            <!-- Confirm & Save Button Form -->
+            <form method="POST" action="{% url 'portal:supervisor_bulk_questions' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="save_text_questions">
+                <input type="hidden" name="target_exam_id" value="{{ selected_exam.id }}">
+                <input type="hidden" name="questions_json" value="{{ preview_questions_json }}">
+                
+                {% if existing_count > 0 %}
+                    <div class="card bg-light border p-3 mb-3 text-start">
+                        <div class="fw-bold small text-dark mb-2">
+                            <i class="fa-solid fa-sliders text-primary me-1"></i> Question Update Strategy (Exam currently has {{ existing_count }} questions):
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="save_mode" id="mode_replace" value="replace" checked>
+                            <label class="form-check-label small fw-semibold text-dark" for="mode_replace">
+                                <span class="badge bg-primary me-1">Update & Replace</span> Update existing questions with these {{ preview_questions|length }} questions (Recommended)
+                            </label>
+                            <div class="text-muted small ps-4">Existing questions are updated in place with your edits and new additions.</div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="save_mode" id="mode_append" value="append">
+                            <label class="form-check-label small text-dark" for="mode_append">
+                                <span class="badge bg-secondary me-1">Append</span> Append as {{ preview_questions|length }} new questions after existing ones
+                            </label>
+                        </div>
+                    </div>
+                {% else %}
+                    <input type="hidden" name="save_mode" value="replace">
+                {% endif %}
+
+                <button type="submit" class="btn btn-success btn-lg px-4 fw-bold shadow">
+                    <i class="fa-solid fa-check-double me-2"></i> Confirm & Save All {{ preview_questions|length }} Questions
+                </button>
+            </form>
+        </div>
+
+        {% if preview_errors %}
+            <div class="alert alert-warning mb-4">
+                <h6 class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>Parser Warnings:</h6>
+                <ul class="mb-0 small ps-3">
+                    {% for err in preview_errors %}
+                        <li>{{ err }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Parsed Questions Cards Grid -->
+        <div class="d-flex flex-column gap-3">
+            {% for q in preview_questions %}
+                <div class="p-3 border rounded-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-dark">Question {{ forloop.counter }}</span>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary-subtle text-primary">+{{ q.marks }} Marks</span>
+                            {% if q.negative_marks > 0 %}
+                                <span class="badge bg-danger-subtle text-danger">-{{ q.negative_marks }} Neg</span>
+                            {% endif %}
+                            <span class="badge bg-success">Correct Option: {{ q.correct_option }}</span>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-semibold text-dark mb-2">{{ q.question_text|linebreaksbr }}</h6>
+
+                    <div class="row g-2 small mb-2">
+                        <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'A' %}bg-success-subtle fw-bold text-success{% else %}bg-white border{% endif %}">
+                            <strong>A:</strong> {{ q.option_a }}
+                        </div>
+                        <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'B' %}bg-success-subtle fw-bold text-success{% else %}bg-white border{% endif %}">
+                            <strong>B:</strong> {{ q.option_b }}
+                        </div>
+                        <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'C' %}bg-success-subtle fw-bold text-success{% else %}bg-white border{% endif %}">
+                            <strong>C:</strong> {{ q.option_c }}
+                        </div>
+                        <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'D' %}bg-success-subtle fw-bold text-success{% else %}bg-white border{% endif %}">
+                            <strong>D:</strong> {{ q.option_d }}
+                        </div>
+                    </div>
+
+                    {% if q.explanation %}
+                        <div class="small text-muted p-2 bg-white rounded border">
+                            <strong class="text-primary"><i class="fa-solid fa-lightbulb me-1"></i>Explanation:</strong> {{ q.explanation }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const examSelect = document.querySelector('select[name="exam"]');
+    const sampleBtn = document.getElementById('loadSampleTextBtn');
+    const loadExistingBtn = document.getElementById('loadExistingQuestionsBtn');
+    const loadExistingBtnText = document.getElementById('loadExistingBtnText');
+    const textarea = document.querySelector('textarea[name="raw_text"]');
+    const noticeBox = document.getElementById('examQuestionsNotice');
+    const noticeMsg = document.getElementById('examQuestionsNoticeMsg');
+    const closeNoticeBtn = document.getElementById('closeNoticeBtn');
+    const countBadge = document.getElementById('questionCountBadge');
+
+    let currentExamQuestions = '';
+
+    function showNotice(msg, type = 'info') {
+        if (!noticeBox || !noticeMsg) return;
+        noticeMsg.innerHTML = msg;
+        noticeBox.className = `alert alert-${type} py-2 px-3 small d-flex align-items-center justify-content-between mb-2 shadow-sm`;
+        noticeBox.style.display = 'flex';
+    }
+
+    if (closeNoticeBtn) {
+        closeNoticeBtn.addEventListener('click', function () {
+            if (noticeBox) noticeBox.style.display = 'none';
+        });
+    }
+
+    function checkExamQuestions(examId, autoLoadIfEmpty = false) {
+        if (!examId) {
+            if (loadExistingBtn) loadExistingBtn.style.display = 'none';
+            if (noticeBox) noticeBox.style.display = 'none';
+            if (countBadge) countBadge.style.display = 'none';
+            currentExamQuestions = '';
+            return;
+        }
+
+        fetch(`/supervisor/api/exam-questions/${examId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.question_count > 0) {
+                    currentExamQuestions = data.raw_text;
+                    if (loadExistingBtn) {
+                        loadExistingBtn.style.display = 'inline-flex';
+                        if (loadExistingBtnText) {
+                            loadExistingBtnText.textContent = `Load Existing Questions (${data.question_count})`;
+                        }
+                    }
+                    if (countBadge) {
+                        countBadge.textContent = `${data.question_count} existing questions in exam`;
+                        countBadge.style.display = 'inline-block';
+                    }
+
+                    const isTextareaEmpty = !textarea.value.trim();
+                    const isSampleText = textarea.value.includes('What is the powerhouse of the cell?');
+
+                    if (autoLoadIfEmpty && (isTextareaEmpty || isSampleText)) {
+                        textarea.value = data.raw_text;
+                        showNotice(`Loaded <strong>${data.question_count}</strong> existing questions from <strong>${data.exam_title}</strong>. You can edit, update, or add questions below.`, 'success');
+                    } else if (!isTextareaEmpty) {
+                        showNotice(`Found <strong>${data.question_count}</strong> existing questions for <strong>${data.exam_title}</strong>. Click 'Load Existing Questions' to load them into the editor.`, 'info');
+                    }
+                } else {
+                    if (loadExistingBtn) loadExistingBtn.style.display = 'none';
+                    if (countBadge) countBadge.style.display = 'none';
+                    currentExamQuestions = '';
+                    if (autoLoadIfEmpty && !textarea.value.trim()) {
+                        showNotice(`This mock test currently has no questions. Type questions or click 'Load Sample Question Text'.`, 'secondary');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching questions for exam:', err);
+            });
+    }
+
+    if (examSelect) {
+        examSelect.addEventListener('change', function () {
+            checkExamQuestions(this.value, true);
+        });
+
+        // If exam is already pre-selected on initial load
+        if (examSelect.value) {
+            checkExamQuestions(examSelect.value, true);
+        }
+    }
+
+    if (loadExistingBtn) {
+        loadExistingBtn.addEventListener('click', function () {
+            if (currentExamQuestions && textarea) {
+                textarea.value = currentExamQuestions;
+                textarea.focus();
+                showNotice('Existing questions loaded into editor. You can now modify, delete, or append questions.', 'success');
+            }
+        });
+    }
+
+    if (sampleBtn && textarea) {
+        sampleBtn.addEventListener('click', function () {
+            textarea.value = `1. What is the powerhouse of the cell?
+A) Nucleus
+B) Ribosome
+C) Mitochondria
+D) Endoplasmic Reticulum
+Ans: C
+Explanation: Mitochondria generate most of the chemical energy needed to power the cell.
+Marks: 2.0
+Negative: 0.5
+
+2. Which planet is known as the Red Planet?
+A) Venus
+B) Mars
+C) Jupiter
+D) Saturn
+Ans: B
+Explanation: Mars appears red because of iron minerals in the Martian soil.
+Marks: 2.0
+Negative: 0.5
+
+3. What is the chemical symbol for Gold?
+A) Ag
+B) Au
+C) Fe
+D) Pb
+Ans: B
+Explanation: The symbol Au comes from the Latin word aurum, meaning shining dawn.
+Marks: 2.0
+Negative: 0.0`;
+            textarea.focus();
+            showNotice('Sample question text loaded into editor.', 'primary');
+        });
+    }
+
+    // Scroll to preview if present
+    const previewSection = document.getElementById('previewSection');
+    if (previewSection) {
+        previewSection.scrollIntoView({ behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

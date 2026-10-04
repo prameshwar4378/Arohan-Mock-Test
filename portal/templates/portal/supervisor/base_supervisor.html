@@ -1,0 +1,857 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supervisor Control Center | Arohan Academy English School{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --arohan-primary: #1e3a8a;       /* Navy Blue */
+            --arohan-secondary: #2563eb;     /* Royal Blue */
+            --arohan-accent: #f59e0b;        /* Gold / Amber */
+            --arohan-success: #10b981;       /* Emerald */
+            --arohan-danger: #ef4444;        /* Crimson Red */
+            --sidebar-width: 270px;
+            --sidebar-bg: #0f172a;           /* Deep Slate / Midnight */
+            --sidebar-text: #94a3b8;
+            --sidebar-active-bg: #1e293b;
+            --main-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--main-bg);
+            color: #1e293b;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        #supervisorSidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.25rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sidebar-brand {
+            padding: 0;
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .sidebar-close-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #94a3b8;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .sidebar-close-btn:hover,
+        .sidebar-close-btn:focus {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #2563eb, #1e3a8a);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f59e0b;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-nav {
+            padding: 1.25rem 0.85rem;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-category {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 0.75rem 0.75rem 0.25rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link i {
+            font-size: 1.1rem;
+            width: 22px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .sidebar-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(3px);
+        }
+
+        .sidebar-link.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .sidebar-link.active i {
+            color: #ffffff;
+        }
+
+        .sidebar-link.bulk-special {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border: 1px dashed rgba(245, 158, 11, 0.35);
+        }
+
+        .sidebar-link.bulk-special:hover {
+            background: #f59e0b;
+            color: #0f172a;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: #090e1a;
+        }
+
+        /* Main Content Wrapper */
+        #supervisorContent {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-width: 0;
+            width: calc(100% - var(--sidebar-width));
+            max-width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s ease;
+        }
+
+        /* Top Bar */
+        .supervisor-topbar {
+            background: #ffffff;
+            padding: 0.85rem 1.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-custom {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease;
+        }
+
+        .btn-arohan-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-arohan-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+            color: #ffffff;
+        }
+
+        .badge-soft-primary { background: #dbeafe; color: #1e40af; }
+        .badge-soft-success { background: #dcfce7; color: #166534; }
+        .badge-soft-warning { background: #fef3c7; color: #92400e; }
+        .badge-soft-danger { background: #fee2e2; color: #991b1b; }
+        .badge-soft-info { background: #e0f2fe; color: #075985; }
+
+        /* Mobile Backdrop Overlay */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1035;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .sidebar-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        body.sidebar-open {
+            overflow: hidden !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar-close-btn {
+                display: flex;
+            }
+            #supervisorSidebar {
+                transform: translateX(-100%);
+            }
+            #supervisorSidebar.show {
+                transform: translateX(0);
+            }
+            #supervisorContent {
+                margin-left: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        /* ==========================================================================
+           AROHAN SMOOTH ANIMATED PRELOADER
+           ========================================================================== */
+        .arohan-preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 40%, #0f172a 0%, #090e1a 100%);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: all;
+        }
+
+        .arohan-preloader.preloader-hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .arohan-preloader-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem;
+            max-width: 320px;
+        }
+
+        .preloader-graphic {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .preloader-ring-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.45);
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.35);
+            animation: preloaderPulse 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .preloader-ring-spinner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #3b82f6;
+            border-right-color: #f59e0b;
+            border-bottom-color: #60a5fa;
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+            animation: preloaderSpin 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+        }
+
+        .preloader-logo-wrapper {
+            position: relative;
+            width: 62px;
+            height: 62px;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            animation: preloaderLogoFloat 2.4s ease-in-out infinite;
+        }
+
+        .preloader-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .preloader-brand-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+            margin-bottom: 3px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .preloader-brand-subtitle {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #f59e0b;
+            margin-bottom: 1.25rem;
+        }
+
+        .preloader-progress-track {
+            width: 160px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0.75rem;
+        }
+
+        .preloader-progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #2563eb 0%, #f59e0b 50%, #38bdf8 100%);
+            border-radius: 9999px;
+            animation: preloaderProgressSweep 1.6s infinite cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .preloader-status-text {
+            font-size: 0.76rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        @keyframes preloaderSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes preloaderPulse {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.18);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(0.85);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes preloaderLogoFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        @keyframes preloaderProgressSweep {
+            0% {
+                transform: translateX(-100%);
+            }
+            50% {
+                transform: translateX(0%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- AROHAN SMOOTH ANIMATED PRELOADER (SUPERVISOR) -->
+    <div id="arohanPreloader" class="arohan-preloader" aria-hidden="true">
+        <div class="arohan-preloader-inner">
+            <div class="preloader-graphic">
+                <div class="preloader-ring-pulse"></div>
+                <div class="preloader-ring-spinner"></div>
+                <div class="preloader-logo-wrapper">
+                    <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" class="preloader-logo">
+                </div>
+            </div>
+            <div class="preloader-brand">
+                <div class="preloader-brand-title">Arohan Academy</div>
+                <div class="preloader-brand-subtitle">Supervisor Control Center</div>
+            </div>
+            <div class="preloader-progress-track">
+                <div class="preloader-progress-bar"></div>
+            </div>
+            <div class="preloader-status-text">
+                <span>Loading management dashboard...</span>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        function hidePreloader() {
+            var pl = document.getElementById('arohanPreloader');
+            if (pl && !pl.classList.contains('preloader-hide')) {
+                pl.classList.add('preloader-hide');
+                setTimeout(function () {
+                    if (pl && pl.parentNode) {
+                        pl.parentNode.removeChild(pl);
+                    }
+                }, 600);
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            setTimeout(hidePreloader, 150);
+        } else {
+            window.addEventListener('load', function () {
+                setTimeout(hidePreloader, 200);
+            });
+            setTimeout(hidePreloader, 1200);
+        }
+
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                hidePreloader();
+            }
+        });
+    })();
+    </script>
+
+    <!-- Sidebar Navigation -->
+    <aside id="supervisorSidebar">
+        <!-- Brand Header & Mobile Close Button -->
+        <div class="sidebar-header">
+            <a href="{% url 'portal:supervisor_dashboard' %}" class="sidebar-brand">
+                <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" style="height: 42px; width: 42px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 2px;">
+                <div>
+                    <div class="fw-bold fs-6 lh-1 text-white">Arohan Academy</div>
+                    <div class="small text-warning fw-semibold mt-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-shield-halved me-1"></i>SUPERVISOR &bull; CONTROL CENTER
+                    </div>
+                </div>
+            </a>
+            <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation menu" title="Close menu">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="sidebar-nav">
+            
+            <div class="nav-category">Main Overview</div>
+            <a href="{% url 'portal:supervisor_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'supervisor_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-category">Academy Operations</div>
+            <a href="{% url 'portal:supervisor_classes' %}" class="sidebar-link {% if 'class' in request.resolver_match.url_name and 'report' not in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fa-solid fa-chalkboard"></i>
+                <span>Classes & Batches</span>
+            </a>
+            <a href="{% url 'portal:supervisor_students' %}" class="sidebar-link {% if 'student' in request.resolver_match.url_name and 'report' not in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>Students Roster & Audits</span>
+            </a>
+
+            <div class="nav-category">Examination Engine</div>
+            <a href="{% url 'portal:supervisor_exams' %}" class="sidebar-link {% if 'exam' in request.resolver_match.url_name and 'bulk' not in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fa-solid fa-file-signature"></i>
+                <span>Mock Tests Catalog</span>
+            </a>
+            <a href="{% url 'portal:supervisor_bulk_questions' %}" class="sidebar-link bulk-special {% if 'bulk' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Bulk Question Paper</span>
+            </a>
+
+            <div class="nav-category">Analytics & Exports</div>
+            <a href="{% url 'portal:supervisor_reports_hub' %}" class="sidebar-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>Performance Reports (PDF/Excel)</span>
+            </a>
+
+            <div class="nav-category">Quick Navigation</div>
+            <a href="{% url 'portal:index' %}" target="_blank" class="sidebar-link">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Student Mock Portal</span>
+            </a>
+        </div>
+
+        <!-- Sidebar Footer / Profile -->
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        {{ request.user.username|make_list|first|upper }}
+                    </div>
+                    <div style="line-height: 1.2;">
+                        <div class="text-white small fw-bold text-truncate" style="max-width: 110px;">{{ request.user.username }}</div>
+                        <span class="text-muted" style="font-size: 0.72rem;">Supervisor</span>
+                    </div>
+                </div>
+                <a href="{% url 'portal:supervisor_logout' %}" class="btn btn-sm btn-outline-danger py-1 px-2" title="Log Out">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Main Content Area -->
+    <div id="supervisorContent">
+        
+        <!-- Top App Bar -->
+        <header class="supervisor-topbar shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-light border d-lg-none" id="sidebarToggleBtn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="supervisorSidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">{% block page_title %}Supervisor Center{% endblock %}</h5>
+                    <div class="text-muted small">{% block page_subtitle %}Arohan Academy English School{% endblock %}</div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'portal:supervisor_bulk_questions' %}" class="btn btn-warning btn-sm fw-bold shadow-sm d-none d-sm-inline-flex align-items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Bulk Question Paper
+                </a>
+                <a href="{% url 'portal:supervisor_exam_create' %}" class="btn btn-arohan-primary btn-sm fw-bold shadow-sm d-none d-sm-inline-flex align-items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> New Mock Test
+                </a>
+                <a href="{% url 'portal:index' %}" target="_blank" class="btn btn-outline-secondary btn-sm" title="View Student Mock Portal">
+                    <i class="fa-solid fa-eye me-1"></i> Student View
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash Toast Messages -->
+        <div class="container-fluid px-4 mt-3">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}
+                                <i class="fa-solid fa-circle-check fs-5 me-2 text-success"></i>
+                            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                                <i class="fa-solid fa-circle-exclamation fs-5 me-2 text-danger"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fa-solid fa-triangle-exclamation fs-5 me-2 text-warning"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info fs-5 me-2 text-primary"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Main Body -->
+        <main class="container-fluid px-4 py-3 flex-grow-1">
+            {% block supervisor_content %}
+                {% block content %}{% endblock %}
+            {% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-top py-3 px-4 text-muted small text-center text-md-start mt-auto">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <div>
+                    &copy; 2026 <strong>Arohan Academy English School</strong> &bull; Supervisor Control Center
+                </div>
+                <div>
+                    <i class="fa-solid fa-code text-primary me-1"></i> Developed by 
+                    <a href="https://prameshwar4378.github.io/My_Portfolio/" target="_blank" rel="noopener noreferrer" class="text-primary fw-bold text-decoration-none border-bottom border-primary pb-0">
+                        Rameshwar Pawar
+                    </a>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'portal:index' %}" class="text-decoration-none text-muted">Student Mock Portal</a>
+                    <span>&bull;</span>
+                    <a href="{% url 'portal:supervisor_dashboard' %}" class="text-decoration-none text-muted">Dashboard</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile Sidebar Controller
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            const sidebar = document.getElementById('supervisorSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            function openSidebar() {
+                if (!sidebar) return;
+                sidebar.classList.add('show');
+                if (backdrop) backdrop.classList.add('show');
+                document.body.classList.add('sidebar-open');
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeSidebar() {
+                if (!sidebar) return;
+                sidebar.classList.remove('show');
+                if (backdrop) backdrop.classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (sidebar && sidebar.classList.contains('show')) {
+                        closeSidebar();
+                    } else {
+                        openSidebar();
+                    }
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeSidebar();
+                });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeSidebar();
+                });
+            }
+
+            // Click anywhere on the right-side blank area / outside sidebar collapses menu on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth < 992 && sidebar && sidebar.classList.contains('show')) {
+                    if (!sidebar.contains(e.target) && (!toggleBtn || !toggleBtn.contains(e.target))) {
+                        closeSidebar();
+                    }
+                }
+            });
+
+            // ESC key collapses sidebar on mobile
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar && sidebar.classList.contains('show')) {
+                    closeSidebar();
+                }
+            });
+
+            // Auto-close sidebar on mobile when navigating via sidebar link
+            const navLinks = sidebar ? sidebar.querySelectorAll('.sidebar-link') : [];
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            // Universal Single-Submit & Loading Protection
+            function getSmartLoadingText(btn) {
+                if (btn.hasAttribute('data-loading-text')) {
+                    return btn.getAttribute('data-loading-text');
+                }
+                const text = (btn.textContent || btn.value || '').trim().toLowerCase();
+                if (text.includes('delete') || text.includes('remove')) return 'Deleting...';
+                if (text.includes('save') || text.includes('update')) return 'Saving...';
+                if (text.includes('upload') || text.includes('import')) return 'Uploading...';
+                if (text.includes('submit')) return 'Submitting...';
+                if (text.includes('create') || text.includes('add') || text.includes('schedule')) return 'Processing...';
+                if (text.includes('login') || text.includes('sign in')) return 'Logging in...';
+                if (text.includes('export') || text.includes('generate')) return 'Generating...';
+                return 'Please wait...';
+            }
+
+            function lockSubmitButton(btn) {
+                if (!btn || btn.dataset.submitting === 'true') return;
+                btn.dataset.submitting = 'true';
+                btn.setAttribute('data-original-html', btn.innerHTML || btn.value);
+
+                const rect = btn.getBoundingClientRect();
+                if (rect.width > 0) {
+                    btn.style.minWidth = `${rect.width}px`;
+                }
+
+                const loadingText = getSmartLoadingText(btn);
+                if (btn.tagName === 'INPUT') {
+                    btn.value = loadingText;
+                } else {
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${loadingText}`;
+                }
+
+                btn.style.pointerEvents = 'none';
+                btn.classList.add('disabled');
+                setTimeout(function () {
+                    btn.disabled = true;
+                }, 50);
+            }
+
+            function unlockSubmitButtons(form) {
+                if (!form) return;
+                delete form.dataset.arohanSubmitted;
+                delete form.dataset.submitting;
+                const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                submitBtns.forEach(function (btn) {
+                    delete btn.dataset.submitting;
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                    btn.style.pointerEvents = '';
+                    btn.style.minWidth = '';
+                    if (btn.hasAttribute('data-original-html')) {
+                        if (btn.tagName === 'INPUT') {
+                            btn.value = btn.getAttribute('data-original-html');
+                        } else {
+                            btn.innerHTML = btn.getAttribute('data-original-html');
+                        }
+                    }
+                });
+            }
+
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+
+                if (form.getAttribute('data-allow-double-submit') === 'true') return;
+
+                if (form.dataset.arohanSubmitted === 'true') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                if (form.checkValidity && !form.checkValidity()) {
+                    return;
+                }
+
+                form.dataset.arohanSubmitted = 'true';
+                const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                submitBtns.forEach(lockSubmitButton);
+            }, false);
+
+            window.addEventListener('pageshow', function () {
+                document.querySelectorAll('form').forEach(unlockSubmitButtons);
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

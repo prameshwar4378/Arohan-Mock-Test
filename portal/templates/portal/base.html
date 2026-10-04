@@ -1,0 +1,775 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}Arohan Academy - Mock Test Portal | Arohan Academy English School{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --arohan-primary: #1e3a8a;       /* Deep Navy */
+            --arohan-secondary: #2563eb;     /* Royal Blue */
+            --arohan-accent: #f59e0b;        /* Amber Gold */
+            --arohan-success: #10b981;       /* Emerald */
+            --arohan-danger: #ef4444;        /* Coral Red */
+            --arohan-dark: #0f172a;          /* Slate 900 */
+            --arohan-light: #f8fafc;         /* Slate 50 */
+            --arohan-card-bg: #ffffff;
+            --arohan-border: #e2e8f0;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            overflow-x: hidden;
+        }
+
+        /* Mobile-First Header Navigation */
+        .navbar-arohan {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            padding: 0.55rem 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .navbar-arohan {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* Guaranteed Single-Row Header Bar for Mobile */
+        .navbar-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            flex-wrap: nowrap;
+            gap: 8px;
+        }
+
+        @media (min-width: 992px) {
+            .navbar-header-row {
+                width: auto;
+            }
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: #ffffff !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+            margin: 0;
+            padding: 0;
+            min-width: 0;
+            flex: 1 1 auto;
+            text-decoration: none;
+        }
+
+        .school-logo-img {
+            height: 38px;
+            width: 38px;
+            min-width: 38px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .school-logo-img {
+                height: 44px;
+                width: 44px;
+                min-width: 44px;
+            }
+        }
+
+        .brand-text-block {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .brand-title {
+            font-weight: 800;
+            font-size: 1.08rem;
+            color: #ffffff;
+            line-height: 1.15;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 768px) {
+            .brand-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        .brand-subtitle {
+            font-size: 0.65rem;
+            color: #f59e0b;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            line-height: 1.2;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 768px) {
+            .brand-subtitle {
+                font-size: 0.72rem;
+            }
+        }
+
+        /* Modern Compact Header Action Buttons */
+        .header-actions-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .header-action-btn {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px !important;
+            border-radius: 50% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            padding: 0 !important;
+            font-size: 0.95rem !important;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .header-btn-dashboard {
+            background: rgba(245, 158, 11, 0.15) !important;
+            border: 1.5px solid #f59e0b !important;
+            color: #fbbf24 !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+        }
+
+        .header-btn-dashboard:hover, .header-btn-dashboard:focus {
+            background: #f59e0b !important;
+            color: #0f172a !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .header-btn-logout {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+        }
+
+        .header-btn-logout:hover, .header-btn-logout:focus {
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-toggler {
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            padding: 6px 10px !important;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .navbar-toggler:hover, .navbar-toggler:focus {
+            background: rgba(255, 255, 255, 0.18) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 0.85rem;
+                margin-top: 0.65rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .brand-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link {
+            color: #cbd5e1 !important;
+            font-weight: 500;
+            padding: 0.55rem 0.85rem !important;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 0.92rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-arohan-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-arohan-primary:hover, .btn-arohan-primary:active {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: #fff;
+        }
+
+        .btn-arohan-accent {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        .card-custom {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--arohan-border);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        .page-header-banner {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #fff;
+            padding: 1.75rem 1.25rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(30, 58, 138, 0.18);
+        }
+
+        @media (min-width: 768px) {
+            .page-header-banner {
+                padding: 2.5rem 2rem;
+                border-radius: 20px;
+                margin-bottom: 2rem;
+            }
+        }
+
+        /* Mobile touch targets */
+        .btn, .form-select, .form-control {
+            min-height: 44px;
+        }
+
+        footer {
+            margin-top: auto;
+            background: #0f172a;
+            color: #cbd5e1;
+            padding: 1.5rem 0;
+            border-top: 1px solid #1e293b;
+        }
+
+        .footer-staff-link {
+            color: #93c5fd;
+            transition: color 0.2s ease;
+        }
+
+        .footer-staff-link:hover {
+            color: #ffffff;
+            text-decoration: underline !important;
+        }
+
+        /* Print styles */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .navbar-arohan, footer, .no-print, .btn-print-hide, #arohanPreloader, .arohan-preloader {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .card-custom {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+            }
+        }
+
+        /* ==========================================================================
+           AROHAN SMOOTH ANIMATED PRELOADER
+           ========================================================================== */
+        .arohan-preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 40%, #0f172a 0%, #090e1a 100%);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: all;
+        }
+
+        .arohan-preloader.preloader-hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .arohan-preloader-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem;
+            max-width: 320px;
+        }
+
+        .preloader-graphic {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .preloader-ring-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.45);
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.35);
+            animation: preloaderPulse 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .preloader-ring-spinner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #3b82f6;
+            border-right-color: #f59e0b;
+            border-bottom-color: #60a5fa;
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+            animation: preloaderSpin 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+        }
+
+        .preloader-logo-wrapper {
+            position: relative;
+            width: 62px;
+            height: 62px;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            animation: preloaderLogoFloat 2.4s ease-in-out infinite;
+        }
+
+        .preloader-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .preloader-brand-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+            margin-bottom: 3px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .preloader-brand-subtitle {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #f59e0b;
+            margin-bottom: 1.25rem;
+        }
+
+        .preloader-progress-track {
+            width: 160px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0.75rem;
+        }
+
+        .preloader-progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #2563eb 0%, #f59e0b 50%, #38bdf8 100%);
+            border-radius: 9999px;
+            animation: preloaderProgressSweep 1.6s infinite cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .preloader-status-text {
+            font-size: 0.76rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        @keyframes preloaderSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes preloaderPulse {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.18);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(0.85);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes preloaderLogoFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        @keyframes preloaderProgressSweep {
+            0% {
+                transform: translateX(-100%);
+            }
+            50% {
+                transform: translateX(0%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- AROHAN SMOOTH ANIMATED PRELOADER -->
+    <div id="arohanPreloader" class="arohan-preloader" aria-hidden="true">
+        <div class="arohan-preloader-inner">
+            <div class="preloader-graphic">
+                <div class="preloader-ring-pulse"></div>
+                <div class="preloader-ring-spinner"></div>
+                <div class="preloader-logo-wrapper">
+                    <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" class="preloader-logo">
+                </div>
+            </div>
+            <div class="preloader-brand">
+                <div class="preloader-brand-title">Arohan Academy</div>
+                <div class="preloader-brand-subtitle">Mock Test Portal</div>
+            </div>
+            <div class="preloader-progress-track">
+                <div class="preloader-progress-bar"></div>
+            </div>
+            <div class="preloader-status-text">
+                <span>Loading examination portal...</span>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        function hidePreloader() {
+            var pl = document.getElementById('arohanPreloader');
+            if (pl && !pl.classList.contains('preloader-hide')) {
+                pl.classList.add('preloader-hide');
+                setTimeout(function () {
+                    if (pl && pl.parentNode) {
+                        pl.parentNode.removeChild(pl);
+                    }
+                }, 600);
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            setTimeout(hidePreloader, 150);
+        } else {
+            window.addEventListener('load', function () {
+                setTimeout(hidePreloader, 200);
+            });
+            setTimeout(hidePreloader, 1200);
+        }
+
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                hidePreloader();
+            }
+        });
+    })();
+    </script>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-dark navbar-arohan sticky-top">
+        <div class="container-fluid container-lg d-flex align-items-center justify-content-between flex-nowrap gap-2">
+            
+            <a class="navbar-brand" href="{% url 'portal:index' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" class="school-logo-img">
+                <div class="brand-text-block">
+                    <div class="brand-title">Arohan Academy</div>
+                    <div class="brand-subtitle">
+                        <span class="d-none d-sm-inline">Arohan Academy English School &bull; </span>MOCK TEST PORTAL
+                    </div>
+                </div>
+            </a>
+
+            <!-- Supervisor Shortcut: Only visible if a teacher/admin is logged in -->
+            {% if user.is_authenticated and user.is_superuser %}
+                <div class="header-actions-group">
+                    <a class="header-action-btn header-btn-dashboard" href="{% url 'portal:supervisor_dashboard' %}" title="Supervisor Dashboard" aria-label="Supervisor Dashboard">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </a>
+                    <a class="header-action-btn header-btn-logout" href="{% url 'portal:supervisor_logout' %}" title="Logout ({{ user.username }})" aria-label="Logout ({{ user.username }})">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                </div>
+            {% endif %}
+
+        </div>
+    </nav>
+
+    <!-- Global Toast / Alert Messages -->
+    <div class="container-fluid container-lg mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check fs-5 me-2 text-success"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                            <i class="fa-solid fa-circle-exclamation fs-5 me-2 text-danger"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fa-solid fa-triangle-exclamation fs-5 me-2 text-warning"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info fs-5 me-2 text-primary"></i>
+                        {% endif %}
+                        <div class="small fw-medium">{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container py-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 small text-center text-md-start">
+                <div class="d-flex align-items-center gap-2 justify-content-center">
+                    <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" height="30" class="rounded bg-white p-1 shadow-sm">
+                    <div>
+                        <div class="text-white fw-bold">Arohan Academy</div>
+                        <div class="text-light opacity-75" style="font-size: 0.72rem;">Arohan Academy English School</div>
+                    </div>
+                </div>
+                
+                <div class="text-light opacity-90 small">
+                    <i class="fa-solid fa-code text-warning me-1"></i> Developed by 
+                    <a href="https://prameshwar4378.github.io/My_Portfolio/" target="_blank" rel="noopener noreferrer" class="text-warning fw-bold text-decoration-none border-bottom border-warning pb-0">
+                        Rameshwar Pawar
+                    </a>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-end flex-wrap" style="font-size: 0.8rem; color: #cbd5e1;">
+                    <span style="color: #cbd5e1;">&copy; 2026 Arohan Academy English School. All Rights Reserved.</span>
+                    {% if not user.is_authenticated or not user.is_superuser %}
+                        <span style="color: #64748b;">&bull;</span>
+                        <a href="{% url 'portal:supervisor_login' %}" class="footer-staff-link text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                            <i class="fa-solid fa-shield-halved text-warning"></i> <span>Staff Login</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global Single-Submit & Loading Protection -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function getSmartLoadingText(btn) {
+            if (btn.hasAttribute('data-loading-text')) {
+                return btn.getAttribute('data-loading-text');
+            }
+            const text = (btn.textContent || btn.value || '').trim().toLowerCase();
+            if (text.includes('delete') || text.includes('remove')) return 'Deleting...';
+            if (text.includes('save') || text.includes('update')) return 'Saving...';
+            if (text.includes('upload') || text.includes('import')) return 'Uploading...';
+            if (text.includes('submit')) return 'Submitting...';
+            if (text.includes('create') || text.includes('add') || text.includes('schedule')) return 'Processing...';
+            if (text.includes('login') || text.includes('sign in')) return 'Logging in...';
+            if (text.includes('start') || text.includes('proceed')) return 'Loading...';
+            return 'Please wait...';
+        }
+
+        function lockSubmitButton(btn) {
+            if (!btn || btn.dataset.submitting === 'true') return;
+            btn.dataset.submitting = 'true';
+            btn.setAttribute('data-original-html', btn.innerHTML || btn.value);
+
+            const rect = btn.getBoundingClientRect();
+            if (rect.width > 0) {
+                btn.style.minWidth = `${rect.width}px`;
+            }
+
+            const loadingText = getSmartLoadingText(btn);
+            if (btn.tagName === 'INPUT') {
+                btn.value = loadingText;
+            } else {
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${loadingText}`;
+            }
+
+            btn.style.pointerEvents = 'none';
+            btn.classList.add('disabled');
+            setTimeout(function () {
+                btn.disabled = true;
+            }, 50);
+        }
+
+        function unlockSubmitButtons(form) {
+            if (!form) return;
+            delete form.dataset.arohanSubmitted;
+            delete form.dataset.submitting;
+            const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitBtns.forEach(function (btn) {
+                delete btn.dataset.submitting;
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+                btn.style.pointerEvents = '';
+                btn.style.minWidth = '';
+                if (btn.hasAttribute('data-original-html')) {
+                    if (btn.tagName === 'INPUT') {
+                        btn.value = btn.getAttribute('data-original-html');
+                    } else {
+                        btn.innerHTML = btn.getAttribute('data-original-html');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (!form || form.tagName !== 'FORM') return;
+
+            if (form.getAttribute('data-allow-double-submit') === 'true') return;
+
+            if (form.dataset.arohanSubmitted === 'true') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+
+            if (form.checkValidity && !form.checkValidity()) {
+                return;
+            }
+
+            form.dataset.arohanSubmitted = 'true';
+            const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitBtns.forEach(lockSubmitButton);
+        }, false);
+
+        window.addEventListener('pageshow', function () {
+            document.querySelectorAll('form').forEach(unlockSubmitButtons);
+        });
+    });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

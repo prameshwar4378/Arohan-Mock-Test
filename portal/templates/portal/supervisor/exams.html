@@ -1,0 +1,157 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Mock Tests Catalog | Supervisor Center{% endblock %}
+{% block page_title %}Mock Tests & Examination Papers{% endblock %}
+{% block page_subtitle %}Create tests, assign to classes, manage question banks, and review results{% endblock %}
+
+{% block supervisor_content %}
+
+<!-- Header Actions -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <div>
+        <span class="badge bg-secondary-subtle text-secondary fw-bold">{{ exams.count }} Mock Tests</span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'portal:supervisor_bulk_questions' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Bulk Question Paper Importer
+        </a>
+        <a href="{% url 'portal:supervisor_exam_create' %}" class="btn btn-arohan-primary btn-sm fw-bold">
+            <i class="fa-solid fa-plus me-1"></i> Create Mock Test
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card-custom p-3 bg-white mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <select name="class_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">-- All Classes / Batches --</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if selected_class_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">-- All Subjects --</option>
+                {% for sub in available_subjects %}
+                <option value="{{ sub }}" {% if selected_subject == sub %}selected{% endif %}>
+                    {{ sub }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" name="q" class="form-control" placeholder="Search test title, code, or subject..." value="{{ search_query }}">
+                {% if search_query or selected_class_id or selected_subject %}
+                <a href="{% url 'portal:supervisor_exams' %}" class="btn btn-outline-secondary">Clear</a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </div>
+        <div class="col-md-2 text-md-end text-muted small">
+            Showing {{ exams|length }} tests
+        </div>
+    </form>
+</div>
+
+<!-- Exams Table -->
+<div class="card-custom p-4 bg-white mb-4">
+    {% if exams %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Exam Title & Subject</th>
+                        <th>Assigned Classes</th>
+                        <th>Duration</th>
+                        <th>Questions</th>
+                        <th>Total Attempts</th>
+                        <th>Avg Score</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in exams %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'portal:supervisor_exam_detail' e.id %}" class="fw-bold text-decoration-none text-dark fs-6">
+                                    {{ e.title }}
+                                </a>
+                                <div class="d-flex align-items-center gap-1 text-muted" style="font-size:0.75rem;">
+                                    <span class="badge bg-primary text-white" style="font-size:0.68rem;">{{ e.subject|default:"General" }}</span>
+                                    {% if e.code %}&bull; <span>{{ e.code }}</span>{% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for c in e.classes.all %}
+                                        <span class="badge badge-soft-primary">{{ c.name }}</span>
+                                    {% empty %}
+                                        <span class="text-muted small">None assigned</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if e.duration_minutes > 0 %}
+                                    <strong>{{ e.duration_minutes }}m</strong>
+                                {% else %}
+                                    <span class="text-muted">Unlimited</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary px-2 py-1">{{ e.question_count }} Questions</span>
+                            </td>
+                            <td>
+                                <strong class="text-dark">{{ e.attempt_count }}</strong>
+                            </td>
+                            <td>
+                                {{ e.avg_score|floatformat:1|default:"-" }}
+                            </td>
+                            <td>
+                                {% if e.is_active %}
+                                    <span class="badge badge-soft-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-soft-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{% url 'portal:supervisor_exam_detail' e.id %}" class="btn btn-sm btn-outline-primary py-1 px-2 fw-semibold" title="View Question Bank & Results">
+                                        Questions & Leaderboard &rarr;
+                                    </a>
+                                    <a href="{% url 'portal:supervisor_exam_bulk_questions' e.id %}" class="btn btn-sm btn-warning py-1 px-2 fw-bold" title="Bulk Edit & Import Questions">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    </a>
+                                    <a href="{% url 'portal:supervisor_exam_edit' e.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit Exam">
+                                        <i class="fa-solid fa-pen text-muted"></i>
+                                    </a>
+                                    <a href="{% url 'portal:supervisor_exam_delete' e.id %}" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Delete Exam">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 bg-light rounded-3">
+            <i class="fa-solid fa-file-signature text-muted fs-1 mb-3"></i>
+            <h6 class="fw-bold text-dark">No mock tests created yet</h6>
+            <p class="text-muted small mb-3">Create your first MCQ examination paper and assign it to classes.</p>
+            <a href="{% url 'portal:supervisor_exam_create' %}" class="btn btn-sm btn-primary">
+                + Create Mock Test Now
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

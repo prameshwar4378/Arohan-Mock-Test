@@ -1,0 +1,194 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Exam Analytics: {{ exam.title }} | Arohan Academy English School Superuser{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Back to Superuser Dashboard -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'portal:superuser_dashboard' %}" class="text-decoration-none text-muted small fw-semibold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Superuser Dashboard
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'portal:superuser_bulk_upload_questions' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Questions (CSV)
+            </a>
+            <a href="/admin/portal/exam/{{ exam.id }}/change/" target="_blank" class="btn btn-outline-dark btn-sm">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Exam in Django Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Exam Profile Card -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary">{{ exam.subject|default:"General" }}</span>
+                    {% if exam.code %}<span class="badge bg-dark">{{ exam.code }}</span>{% endif %}
+                    {% for c in exam.classes.all %}
+                        <span class="badge bg-secondary-subtle text-secondary">{{ c.name }}</span>
+                    {% endfor %}
+                </div>
+                <h3 class="fw-bold mb-0 text-dark">{{ exam.title }}</h3>
+            </div>
+            <div>
+                <span class="badge bg-dark px-3 py-2 fs-6">
+                    {{ total_attempts }} Total Student Attempts
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Stats Grid -->
+    <div class="row g-3 mb-4 text-center">
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="small text-muted fw-semibold">Questions</div>
+                <h3 class="fw-bold mb-0 text-dark">{{ exam.total_questions_count }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="small text-muted fw-semibold">Total Marks</div>
+                <h3 class="fw-bold mb-0 text-primary">{{ exam.total_marks }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="small text-muted fw-semibold">Average Score</div>
+                <h3 class="fw-bold mb-0 text-info">{{ avg_score }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="small text-muted fw-semibold">Highest Score</div>
+                <h3 class="fw-bold mb-0 text-success">{{ highest_score }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Attempts on This Exam Table -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-ranking-star text-warning me-2"></i>Student Attempts & Leaderboard
+            </h5>
+            <span class="badge bg-secondary-subtle text-secondary">{{ attempts.count }} Submissions</span>
+        </div>
+
+        {% if attempts %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student Name</th>
+                            <th>Class</th>
+                            <th>Attempt</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th class="text-end">Verification Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attempts %}
+                            <tr>
+                                <td>
+                                    {% if forloop.counter == 1 %}
+                                        <i class="fa-solid fa-trophy text-warning fs-5"></i>
+                                    {% elif forloop.counter == 2 %}
+                                        <i class="fa-solid fa-medal text-secondary fs-5"></i>
+                                    {% elif forloop.counter == 3 %}
+                                        <i class="fa-solid fa-award text-danger fs-5"></i>
+                                    {% else %}
+                                        <span class="text-muted fw-bold">#{{ forloop.counter }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'portal:superuser_student_detail' att.student.id %}" class="fw-bold text-decoration-none text-dark">
+                                        {{ att.student.name }}
+                                    </a>
+                                    <div class="text-muted" style="font-size:0.75rem;">Roll: {{ att.student.roll_number }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ att.student.student_class.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark">#{{ att.attempt_number }}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-dark">{{ att.score_obtained }}</strong> / {{ att.max_score }}
+                                </td>
+                                <td>
+                                    <strong>{{ att.percentage }}%</strong>
+                                </td>
+                                <td class="small text-muted">{{ att.formatted_time_taken }}</td>
+                                <td class="small text-muted">{{ att.started_at|date:"d M, H:i" }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold">
+                                        View Report &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted small">
+                No student attempts recorded for this exam yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Questions Bank for This Exam -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-clipboard-question text-primary me-2"></i>Question Bank ({{ questions.count }} Questions)
+            </h5>
+            <a href="{% url 'portal:superuser_bulk_upload_questions' %}" class="btn btn-sm btn-outline-primary">
+                + Upload More Questions
+            </a>
+        </div>
+
+        <div class="d-flex flex-column gap-3">
+            {% for q in questions %}
+                <div class="p-3 border rounded-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-dark">Q{{ q.order }}</span>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success-subtle text-success">+{{ q.marks }} Marks</span>
+                            {% if q.negative_marks > 0 %}
+                                <span class="badge bg-danger-subtle text-danger">-{{ q.negative_marks }} Negative</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="fw-medium text-dark mb-2">{{ q.question_text }}</div>
+                    <div class="row g-2 small text-muted mb-2">
+                        <div class="col-sm-6"><strong {% if q.correct_option == 'A' %}class="text-success fw-bold"{% endif %}>A:</strong> {{ q.option_a }}</div>
+                        <div class="col-sm-6"><strong {% if q.correct_option == 'B' %}class="text-success fw-bold"{% endif %}>B:</strong> {{ q.option_b }}</div>
+                        <div class="col-sm-6"><strong {% if q.correct_option == 'C' %}class="text-success fw-bold"{% endif %}>C:</strong> {{ q.option_c }}</div>
+                        <div class="col-sm-6"><strong {% if q.correct_option == 'D' %}class="text-success fw-bold"{% endif %}>D:</strong> {{ q.option_d }}</div>
+                    </div>
+                    <div class="small">
+                        <span class="badge bg-success">Correct Option: {{ q.correct_option }}</span>
+                        {% if q.explanation %}
+                            <span class="text-secondary ms-2"><em>Explanation: {{ q.explanation|truncatechars:120 }}</em></span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-4 text-muted small">
+                    No questions added yet. Use Bulk Upload to upload questions from CSV.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

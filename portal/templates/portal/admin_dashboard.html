@@ -1,0 +1,256 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Superuser Dashboard - Arohan Academy English School Mocktest Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Superuser Banner -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-1 fw-bold mb-1">
+                <i class="fa-solid fa-crown me-1"></i> Superuser Administration
+            </span>
+            <h2 class="fw-bold mb-0 text-dark">Arohan Academy English School Control Center</h2>
+            <p class="text-muted small mb-0">Oversee classes, students, exams, and detailed attempt records.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'portal:superuser_bulk_upload_students' %}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-file-arrow-up me-1"></i> Bulk Upload Students
+            </a>
+            <a href="{% url 'portal:superuser_bulk_upload_questions' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-cloud-arrow-up me-1"></i> Bulk Upload Questions
+            </a>
+            <a href="/admin/" target="_blank" class="btn btn-dark btn-sm">
+                <i class="fa-solid fa-sliders me-1"></i> Full Django Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 KPI Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold">Classes / Batches</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_classes }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                        <i class="fa-solid fa-chalkboard fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold">Enrolled Students</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_students }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+                        <i class="fa-solid fa-user-graduate fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold">Active Mock Tests</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_exams }}</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
+                        <i class="fa-solid fa-file-signature fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-custom p-3 border-0 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold">Total Exam Attempts</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_attempts }}</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                        <i class="fa-solid fa-chart-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Exam Attempts Table -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Recent Exam Submissions
+                </h5>
+                <p class="text-muted small mb-0">Live feed of student test attempts across all classes</p>
+            </div>
+            <a href="{% url 'portal:superuser_students' %}" class="btn btn-sm btn-outline-secondary">
+                View All Students &rarr;
+            </a>
+        </div>
+
+        {% if recent_attempts %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Exam</th>
+                            <th>Attempt</th>
+                            <th>Score / Max</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                            <th>Submitted At</th>
+                            <th class="text-end">Verification Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in recent_attempts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'portal:superuser_student_detail' att.student.id %}" class="fw-bold text-decoration-none text-dark">
+                                        {{ att.student.name }}
+                                    </a>
+                                    <div class="text-muted" style="font-size:0.75rem;">Roll: {{ att.student.roll_number }}</div>
+                                </td>
+                                <td>{{ att.student.student_class.name }}</td>
+                                <td>
+                                    <a href="{% url 'portal:superuser_exam_detail' att.exam.id %}" class="text-decoration-none text-primary">
+                                        {{ att.exam.title }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-dark">#{{ att.attempt_number }}</span></td>
+                                <td><strong>{{ att.score_obtained }}</strong> / {{ att.max_score }}</td>
+                                <td><strong>{{ att.percentage }}%</strong></td>
+                                <td>
+                                    {% if att.is_passed %}
+                                        <span class="badge bg-success">Passed</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ att.started_at|date:"d M, H:i" }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold">
+                                        View Report &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted small">
+                No exam attempts recorded yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Classes and Exams Overview Grid -->
+    <div class="row g-4">
+        
+        <!-- Classes Overview -->
+        <div class="col-lg-6">
+            <div class="card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-chalkboard text-primary me-2"></i>Class Batches
+                    </h5>
+                    <a href="{% url 'portal:superuser_bulk_upload_students' %}" class="btn btn-sm btn-outline-primary">
+                        + Add / Upload Students
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Class Name</th>
+                                <th>Code</th>
+                                <th>Students</th>
+                                <th>Exams</th>
+                                <th class="text-end">Roster</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in classes %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ c.name }}</td>
+                                    <td><span class="badge bg-secondary">{{ c.code|default:"-" }}</span></td>
+                                    <td><strong class="text-primary">{{ c.student_count }}</strong></td>
+                                    <td>{{ c.exam_count }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'portal:superuser_students' %}?class_id={{ c.id }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                                            View Students
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted">No classes created.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exams Overview -->
+        <div class="col-lg-6">
+            <div class="card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-file-lines text-primary me-2"></i>Mock Test Performance
+                    </h5>
+                    <a href="{% url 'portal:superuser_bulk_upload_questions' %}" class="btn btn-sm btn-outline-primary">
+                        + Upload Questions
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Exam Title</th>
+                                <th>Attempts</th>
+                                <th>Avg Score</th>
+                                <th>Top Score</th>
+                                <th class="text-end">Analytics</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in exams %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ e.title }}</div>
+                                        <span class="text-muted" style="font-size:0.75rem;">{{ e.subject|default:"General" }}</span>
+                                    </td>
+                                    <td><span class="badge bg-dark">{{ e.attempt_count }}</span></td>
+                                    <td>{{ e.avg_score|floatformat:1|default:"-" }}</td>
+                                    <td><strong class="text-success">{{ e.highest_score|default:"-" }}</strong></td>
+                                    <td class="text-end">
+                                        <a href="{% url 'portal:superuser_exam_detail' e.id %}" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                                            Details &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted">No exams created.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

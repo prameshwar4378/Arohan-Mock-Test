@@ -1,0 +1,98 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}{{ title }} | Supervisor Center{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block supervisor_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card-custom p-4 p-md-5 bg-white mb-4">
+            
+            <div class="mb-4 pb-3 border-bottom">
+                <h4 class="fw-bold text-dark mb-1">{{ title }}</h4>
+                <p class="text-muted small mb-0">Specify the question statement, 4 choices, mark values, and detailed solution explanation.</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-dark small">Mock Test / Exam *</label>
+                        {{ form.exam }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small">Display Order Sequence #</label>
+                        {{ form.order }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">Question Statement *</label>
+                    {{ form.question_text }}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small">Optional Diagram / Image</label>
+                    {{ form.question_image }}
+                </div>
+
+                <!-- 4 Options -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Option A *</label>
+                        {{ form.option_a }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Option B *</label>
+                        {{ form.option_b }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Option C *</label>
+                        {{ form.option_c }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Option D *</label>
+                        {{ form.option_d }}
+                    </div>
+                </div>
+
+                <!-- Answer & Marks -->
+                <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small">Correct Option *</label>
+                        {{ form.correct_option }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small">Marks Awarded (+)</label>
+                        {{ form.marks }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small">Negative Marking (-)</label>
+                        {{ form.negative_marks }}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small">Solution / Detailed Explanation</label>
+                    {{ form.explanation }}
+                    <div class="form-text small text-muted">This explanation is displayed to students after submitting the test.</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    {% if exam %}
+                        <a href="{% url 'portal:supervisor_exam_detail' exam.id %}" class="btn btn-outline-secondary">Cancel</a>
+                    {% else %}
+                        <a href="{% url 'portal:supervisor_exams' %}" class="btn btn-outline-secondary">Cancel</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-arohan-primary px-4 fw-bold">Save Question</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

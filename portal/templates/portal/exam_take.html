@@ -1,0 +1,1835 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Taking Test: {{ exam.title }} | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Mobile-First CBT Layout Styles */
+    body {
+        background-color: #f1f5f9;
+        padding-bottom: 95px !important; /* Space for fixed bottom action bar */
+    }
+
+    /* Fixed Top Exam Appbar */
+    .cbt-mobile-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1025;
+        background: #0f172a;
+        color: #ffffff;
+        padding: 0.65rem 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .exam-progress-bar {
+        height: 4px;
+        background: #334155;
+        width: 100%;
+        margin-top: 6px;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .exam-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #38bdf8, #2563eb);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .timer-pill {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.05rem;
+        font-weight: 700;
+        background: #1e293b;
+        color: #38bdf8;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .timer-warning {
+        background: #7f1d1d !important;
+        color: #fca5a5 !important;
+        border-color: #ef4444 !important;
+        animation: timerBlink 1s infinite alternate;
+    }
+
+    @keyframes timerBlink {
+        from { opacity: 1; }
+        to { opacity: 0.65; }
+    }
+
+    /* 1-Minute Warning Notification Banner */
+    .one-minute-warning-banner {
+        position: sticky;
+        top: 54px;
+        z-index: 1024;
+        background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+        border-bottom: 2px solid #ef4444;
+        color: #ffffff;
+        padding: 0.65rem 1rem;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        animation: slideDownWarning 0.35s ease forwards;
+    }
+
+    @keyframes slideDownWarning {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .warning-pulse-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        background: rgba(239, 68, 68, 0.4);
+        border: 1.5px solid #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fef08a;
+        font-size: 0.95rem;
+        animation: warningPulse 1s infinite alternate;
+    }
+
+    @keyframes warningPulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+        }
+        100% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+        }
+    }
+
+    .timer-urgent-1min {
+        background: #991b1b !important;
+        border-color: #ef4444 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.7) !important;
+        animation: urgentBlink 0.75s infinite alternate !important;
+    }
+
+    @keyframes urgentBlink {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
+    }
+
+    /* Full-Screen Auto-Submit Overlay */
+    .auto-submit-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.94);
+        backdrop-filter: blur(12px);
+        z-index: 9999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+    }
+
+    .auto-submit-card {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        max-width: 440px;
+        width: 90%;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+    }
+
+    .auto-submit-spinner {
+        position: relative;
+        width: 76px;
+        height: 76px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .auto-submit-spinner .orbital-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid transparent;
+    }
+
+    .auto-submit-spinner .orbital-ring-1 {
+        width: 76px;
+        height: 76px;
+        border-top-color: #f59e0b;
+        border-right-color: #ef4444;
+        animation: preloaderSpin 1.2s infinite linear;
+    }
+
+    .auto-submit-spinner .orbital-ring-2 {
+        width: 58px;
+        height: 58px;
+        border-bottom-color: #38bdf8;
+        border-left-color: #2563eb;
+        animation: preloaderSpin 1.8s infinite linear reverse;
+    }
+
+    .auto-submit-icon {
+        font-size: 1.6rem;
+    }
+
+    /* Option Cards */
+    .option-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem 1.15rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 56px;
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    .option-card:active {
+        transform: scale(0.99);
+    }
+
+    .option-card.selected {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    }
+
+    .option-badge {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.9rem;
+        border: 1px solid #cbd5e1;
+    }
+
+    .option-card.selected .option-badge {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+
+    /* Fixed Bottom Action Bar */
+    .cbt-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        padding: 0.65rem 1rem;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+        z-index: 1030;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .action-btn-touch {
+        min-height: 46px;
+        font-weight: 600;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+    }
+
+    /* Question Palette Button Grid */
+    .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        max-height: 340px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .palette-btn {
+        height: 44px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 700;
+        font-size: 0.92rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        touch-action: manipulation;
+    }
+
+    .palette-btn.active-q {
+        border: 2px solid #0f172a !important;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.25);
+    }
+
+    .palette-btn.answered {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        border-color: #059669 !important;
+    }
+
+    .palette-btn.unanswered {
+        background: #f97316 !important;
+        color: #ffffff !important;
+        border-color: #ea580c !important;
+    }
+
+    .palette-btn.reviewed {
+        background: #8b5cf6 !important;
+        color: #ffffff !important;
+        border-color: #7c3aed !important;
+    }
+
+    /* Review state styling */
+    .bg-purple {
+        background-color: #8b5cf6 !important;
+        color: #ffffff !important;
+    }
+
+    .border-purple {
+        border-color: #8b5cf6 !important;
+    }
+
+    .text-purple {
+        color: #7c3aed !important;
+    }
+
+    .question-container.in-review {
+        border: 2px solid #8b5cf6 !important;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.18) !important;
+    }
+
+    .btn-review-toggle {
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+        touch-action: manipulation;
+    }
+
+    .btn-review-toggle.is-reviewed {
+        background: #8b5cf6 !important;
+        color: #ffffff !important;
+        border: 1px solid #7c3aed !important;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-review-toggle.not-reviewed {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+    }
+
+    .btn-review-toggle.not-reviewed:hover {
+        background: #f3e8ff;
+        color: #7c3aed;
+        border-color: #c084fc;
+    }
+
+    /* Bottom Toolbar Review Button */
+    .btn-bottom-review {
+        transition: all 0.2s ease;
+    }
+
+    .btn-bottom-review.is-reviewed {
+        background: #8b5cf6 !important;
+        color: #ffffff !important;
+        border-color: #7c3aed !important;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-bottom-review.not-reviewed {
+        background: #ffffff;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+    }
+
+    .btn-bottom-review.not-reviewed:hover {
+        background: #f8fafc;
+        color: #7c3aed;
+    }
+
+    /* Guided Exam Tour Spotlight & Tooltip Styling */
+    .tour-spotlight-box {
+        position: fixed;
+        z-index: 1060;
+        border: 3px solid #f59e0b;
+        border-radius: 14px;
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 25px rgba(245, 158, 11, 0.65);
+        pointer-events: none;
+        transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                    left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                    width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                    height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: tourSpotlightPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes tourSpotlightPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 12px rgba(245, 158, 11, 0.35);
+        }
+        50% {
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 28px rgba(245, 158, 11, 0.85);
+        }
+    }
+
+    .tour-tooltip-card {
+        position: fixed;
+        z-index: 1070;
+        width: calc(100vw - 28px);
+        max-width: 350px;
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 1rem 1.15rem;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                    left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        touch-action: manipulation;
+    }
+
+    .tour-arrow {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tour-arrow.arrow-down {
+        bottom: -9px;
+        border-width: 9px 8px 0 8px;
+        border-color: #2563eb transparent transparent transparent;
+    }
+
+    .tour-arrow.arrow-up {
+        top: -9px;
+        border-width: 0 8px 9px 8px;
+        border-color: transparent transparent #1e3a8a transparent;
+    }
+
+    .tour-title {
+        font-size: 0.98rem;
+        letter-spacing: -0.2px;
+    }
+
+    .tour-text {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.84rem;
+        line-height: 1.4;
+    }
+
+    .tour-close-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #ffffff;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+
+    .tour-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+    }
+
+    .tour-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.35);
+        transition: all 0.25s ease;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .tour-dot.active {
+        width: 18px;
+        background: #ffffff;
+    }
+
+    .tour-tooltip-card .btn {
+        min-height: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 12px !important;
+        font-size: 0.82rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- STICKY TOP APPBAR -->
+<div class="cbt-mobile-bar">
+    <div class="container-fluid container-lg px-2 px-md-3">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            
+            <!-- Left Info: Chapter / Exam Title & Student Name -->
+            <div class="overflow-hidden flex-grow-1" style="min-width: 0;">
+                <div class="fw-bold text-white small text-truncate" style="font-size: 0.92rem; line-height: 1.25;">{{ exam.title }}</div>
+                <div class="text-light opacity-75 small text-truncate" style="font-size: 0.72rem;">
+                    {{ student.name }} &bull; Roll: {{ student.roll_number }}
+                </div>
+            </div>
+
+            <!-- Right Controls: Tour + Timer + Palette Drawer Button -->
+            <div class="d-flex align-items-center gap-1.5">
+                <button type="button" class="btn btn-sm btn-outline-light px-2 py-1 d-flex align-items-center gap-1" id="btnExamTour" title="Interactive CBT Tour" aria-label="Interactive Tour">
+                    <i class="fa-solid fa-circle-question text-warning"></i>
+                    <span class="d-none d-sm-inline small fw-bold text-white">Tour</span>
+                </button>
+
+                <div class="timer-pill" id="examTimer">
+                    <i class="fa-solid fa-clock small"></i>
+                    <span id="timerText">00:00:00</span>
+                </div>
+
+                <!-- Palette Offcanvas Toggle for Mobile -->
+                <button type="button" class="btn btn-sm btn-outline-light d-lg-none px-2" data-bs-toggle="offcanvas" data-bs-target="#paletteOffcanvas" aria-label="Open Question Palette" id="paletteToggleBtn">
+                    <i class="fa-solid fa-table-cells fs-6"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Linear Progress Fill -->
+        <div class="exam-progress-bar">
+            <div class="exam-progress-fill" id="examProgressFill"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 1-Minute Warning Notification Banner -->
+<div id="oneMinuteWarningBanner" class="one-minute-warning-banner" style="display: none;">
+    <div class="container-fluid container-lg d-flex align-items-center justify-content-between flex-wrap gap-2 px-0">
+        <div class="d-flex align-items-center gap-2">
+            <div class="warning-pulse-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="fw-bold text-white small" style="letter-spacing: 0.2px;">
+                    <span class="badge bg-warning text-dark fw-bold me-1">1 MINUTE REMAINING</span> If you do not submit manually, your exam will submit automatically!
+                </div>
+                <div class="text-white-50" style="font-size: 0.74rem;">
+                    Auto-submitting in <strong id="warningBannerCountdown" class="text-warning fw-bold">60</strong> seconds. Please review your answers now.
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" class="btn btn-warning btn-sm fw-bold px-3 py-1 openSubmitModalTrigger shadow-sm" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-paper-plane me-1"></i> Submit Now
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm px-2 py-1 opacity-75" id="btnDismiss1MinWarning" title="Keep answering">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CBT EXAM RUNNER FORM -->
+<div class="container-fluid container-lg py-3">
+    <form id="examForm" method="POST" action="{% url 'portal:exam_submit' exam.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="student_id" value="{{ student.id }}">
+        <input type="hidden" name="time_taken_seconds" id="timeTakenSeconds" value="0">
+
+        <div class="row g-4">
+            
+            <!-- Question Display Panel -->
+            <div class="col-lg-8">
+                
+                {% for q in questions %}
+                    <div class="question-container card-custom p-3 p-md-4 mb-3" id="qContainer_{{ forloop.counter }}" data-q-index="{{ forloop.counter }}" style="{% if not forloop.first %}display: none;{% endif %}">
+                        
+                        <!-- Question Header Card -->
+                        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom flex-wrap gap-2">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary text-white fs-6 px-3 py-1 fw-bold rounded-pill question-qnum-badge" id="qNumBadge_{{ forloop.counter }}">
+                                    Q {{ forloop.counter }} of {{ total_questions }}
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Top Review Toggle Button -->
+                                <button type="button" class="btn btn-sm btn-review-toggle not-reviewed top-review-btn" id="topReviewBtn_{{ forloop.counter }}" data-q-index="{{ forloop.counter }}" title="Toggle Review">
+                                    <i class="fa-regular fa-bookmark"></i>
+                                    <span class="review-btn-text">Review</span>
+                                </button>
+                                <span class="badge bg-success-subtle text-success small fw-semibold">+{{ q.marks }} Marks</span>
+                                {% if q.negative_marks > 0 %}
+                                    <span class="badge bg-danger-subtle text-danger small fw-semibold">-{{ q.negative_marks }} Neg</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Question Statement Text -->
+                        <div class="question-text mb-4">
+                            <h5 class="fw-semibold text-dark lh-base fs-5 fs-md-4">
+                                {{ q.question_text|linebreaksbr }}
+                            </h5>
+                            {% if q.question_image %}
+                                <div class="my-3 text-center">
+                                    <img src="{{ q.question_image.url }}" alt="Question Image" class="img-fluid rounded-3 border shadow-sm" style="max-height: 250px;">
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 4 Options Cards -->
+                        <div class="options-wrapper d-flex flex-column gap-2 mb-3" id="optionsWrapper_{{ forloop.counter }}">
+                            
+                            <!-- Option A -->
+                            <div class="option-card" data-q-index="{{ forloop.counter }}" data-opt="A">
+                                <div class="option-badge">A</div>
+                                <div class="flex-grow-1 text-dark fw-medium">{{ q.option_a }}</div>
+                                <input class="form-check-input q-radio d-none" type="radio" name="question_{{ q.id }}" value="A" id="q_{{ q.id }}_A">
+                            </div>
+
+                            <!-- Option B -->
+                            <div class="option-card" data-q-index="{{ forloop.counter }}" data-opt="B">
+                                <div class="option-badge">B</div>
+                                <div class="flex-grow-1 text-dark fw-medium">{{ q.option_b }}</div>
+                                <input class="form-check-input q-radio d-none" type="radio" name="question_{{ q.id }}" value="B" id="q_{{ q.id }}_B">
+                            </div>
+
+                            <!-- Option C -->
+                            <div class="option-card" data-q-index="{{ forloop.counter }}" data-opt="C">
+                                <div class="option-badge">C</div>
+                                <div class="flex-grow-1 text-dark fw-medium">{{ q.option_c }}</div>
+                                <input class="form-check-input q-radio d-none" type="radio" name="question_{{ q.id }}" value="C" id="q_{{ q.id }}_C">
+                            </div>
+
+                            <!-- Option D -->
+                            <div class="option-card" data-q-index="{{ forloop.counter }}" data-opt="D">
+                                <div class="option-badge">D</div>
+                                <div class="flex-grow-1 text-dark fw-medium">{{ q.option_d }}</div>
+                                <input class="form-check-input q-radio d-none" type="radio" name="question_{{ q.id }}" value="D" id="q_{{ q.id }}_D">
+                            </div>
+
+                        </div>
+
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <!-- Desktop Question Palette (Visible on lg and above) -->
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="card-custom p-4 sticky-top" id="desktopPaletteCard" style="top: 85px; z-index: 10;">
+                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center justify-content-between">
+                        <span><i class="fa-solid fa-table-cells text-primary me-2"></i>Question Palette</span>
+                        <span class="badge bg-secondary-subtle text-secondary">{{ total_questions }} Total</span>
+                    </h6>
+
+                    <!-- Legend -->
+                    <div class="d-flex flex-wrap gap-2 small mb-3 p-2 bg-light rounded-3">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #10b981;"></span>
+                            <span class="text-muted" style="font-size: 0.75rem;">Answered (<strong class="answeredCount text-dark">0</strong>)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #f97316;"></span>
+                            <span class="text-muted" style="font-size: 0.75rem;">Unanswered (<strong class="unansweredCount text-dark">{{ total_questions }}</strong>)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #8b5cf6;"></span>
+                            <span class="text-muted" style="font-size: 0.75rem;">Review (<strong class="reviewedCount text-dark">0</strong>)</span>
+                        </div>
+                    </div>
+
+                    <!-- Button Grid -->
+                    <div class="palette-grid mb-4" id="desktopPaletteGrid">
+                        {% for q in questions %}
+                            <button type="button" 
+                                    class="palette-btn palette-btn-shared {% if forloop.first %}active-q{% endif %}" 
+                                    id="desktopPaletteBtn_{{ forloop.counter }}" 
+                                    data-target="{{ forloop.counter }}">
+                                {{ forloop.counter }}
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <button type="button" class="btn btn-success btn-lg w-100 fw-bold shadow-sm openSubmitModalTrigger">
+                            <i class="fa-solid fa-paper-plane me-2"></i> Submit Mock Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MOBILE SLIDE-UP DRAWER (OFFCANVAS) FOR QUESTION PALETTE -->
+        <div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="paletteOffcanvas" aria-labelledby="paletteOffcanvasLabel" style="height: 60vh;">
+            <div class="offcanvas-header border-bottom py-3">
+                <h6 class="offcanvas-title fw-bold text-dark" id="paletteOffcanvasLabel">
+                    <i class="fa-solid fa-table-cells text-primary me-2"></i>Question Palette ({{ total_questions }})
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <!-- Mobile Legend -->
+                <div class="d-flex justify-content-around small mb-3 p-2 bg-light rounded-3">
+                    <span class="text-success fw-bold"><i class="fa-solid fa-square text-success me-1"></i>Answered (<span class="answeredCount">0</span>)</span>
+                    <span class="text-warning fw-bold"><i class="fa-solid fa-square text-warning me-1"></i>Pending (<span class="unansweredCount">{{ total_questions }}</span>)</span>
+                    <span class="text-purple fw-bold" style="color:#7c3aed;"><i class="fa-solid fa-square me-1" style="color:#8b5cf6;"></i>Review (<span class="reviewedCount">0</span>)</span>
+                </div>
+
+                <!-- Palette Grid inside Drawer -->
+                <div class="palette-grid mb-3" id="mobilePaletteGrid">
+                    {% for q in questions %}
+                        <button type="button" 
+                                class="palette-btn palette-btn-shared {% if forloop.first %}active-q{% endif %}" 
+                                id="mobilePaletteBtn_{{ forloop.counter }}" 
+                                data-target="{{ forloop.counter }}">
+                            {{ forloop.counter }}
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="btn btn-success w-100 py-2 fw-bold openSubmitModalTrigger" data-bs-dismiss="offcanvas">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Submit Test
+                </button>
+            </div>
+        </div>
+
+        <!-- FIXED BOTTOM ACTION TOOLBAR -->
+        <div class="cbt-bottom-bar">
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-light border action-btn-touch px-3" id="prevBtn" disabled>
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button type="button" class="btn btn-light border action-btn-touch text-danger px-2 px-sm-3" id="clearBtn" title="Clear Response">
+                    <i class="fa-solid fa-eraser"></i> <span class="d-none d-sm-inline ms-1">Clear</span>
+                </button>
+                <button type="button" class="btn action-btn-touch btn-bottom-review not-reviewed px-2 px-sm-3" id="reviewBtn" title="Toggle Review">
+                    <i class="fa-regular fa-bookmark" id="bottomReviewIcon"></i> <span class="d-none d-sm-inline ms-1" id="bottomReviewText">Review</span>
+                </button>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-arohan-primary action-btn-touch px-4" id="nextBtn">
+                    Next <i class="fa-solid fa-chevron-right ms-1"></i>
+                </button>
+                <button type="button" class="btn btn-success action-btn-touch px-3 openSubmitModalTrigger" id="bottomSubmitBtn">
+                    <i class="fa-solid fa-check me-1"></i> Submit
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Submission Confirmation Modal (Top-Level) -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="submitModalLabel">
+                    <i class="fa-solid fa-circle-question text-warning me-2"></i>Confirm Submission
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted small mb-3">
+                    Review your answer count before final evaluation:
+                </p>
+                
+                <div class="row g-2 text-center mb-4">
+                    <div class="col-3">
+                        <div class="p-2 bg-success-subtle rounded-3">
+                            <div class="small text-success fw-bold" style="font-size:0.75rem;">Answered</div>
+                            <h4 class="fw-bold mb-0 text-success" id="modalAnswered">0</h4>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-warning-subtle rounded-3">
+                            <div class="small text-warning fw-bold" style="font-size:0.75rem;">Pending</div>
+                            <h4 class="fw-bold mb-0 text-warning" id="modalUnanswered">0</h4>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded-3" style="background:#f3e8ff;">
+                            <div class="small fw-bold" style="color:#7c3aed; font-size:0.75rem;">In Review</div>
+                            <h4 class="fw-bold mb-0" style="color:#7c3aed;" id="modalReviewed">0</h4>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-primary-subtle rounded-3">
+                            <div class="small text-primary fw-bold" style="font-size:0.75rem;">Total</div>
+                            <h4 class="fw-bold mb-0 text-primary">{{ total_questions }}</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 small mb-0">
+                    <i class="fa-solid fa-info-circle me-1"></i>
+                    After submitting, your score and verification report will be displayed immediately.
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Return</button>
+                <button type="button" class="btn btn-success px-4 fw-bold" id="finalSubmitBtn">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Yes, Final Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full-Screen Auto-Submit Overlay -->
+<div id="autoSubmitOverlay" class="auto-submit-overlay" style="display: none;">
+    <div class="auto-submit-card text-center p-4">
+        <div class="auto-submit-spinner mb-3">
+            <div class="orbital-ring orbital-ring-1"></div>
+            <div class="orbital-ring orbital-ring-2"></div>
+            <div class="auto-submit-icon">
+                <i class="fa-solid fa-clock-rotate-left text-warning"></i>
+            </div>
+        </div>
+        <h4 class="fw-bold text-white mb-2">Time Expired!</h4>
+        <p class="text-white-50 small mb-3">
+            Exam countdown is over. Submitting your mock test automatically...
+        </p>
+        <div class="progress mb-3" style="height: 6px; background: rgba(255,255,255,0.15); border-radius: 999px; overflow: hidden;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 100%;"></div>
+        </div>
+        <div class="text-warning small fw-semibold">
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Generating scorecard &amp; evaluation report...
+        </div>
+    </div>
+</div>
+
+<!-- Guided CBT Exam Tour Spotlight Overlay and Tooltip Card -->
+<div id="tourSpotlightBox" class="tour-spotlight-box" style="display: none;"></div>
+<div id="tourTooltipCard" class="tour-tooltip-card" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+    <div class="tour-arrow" id="tourArrow"></div>
+    <div class="tour-header d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/logo.png' %}" alt="Arohan" class="rounded bg-white p-0.5" style="height: 22px; width: 22px; object-fit: contain;">
+            <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-2 py-0.5" style="font-size: 0.72rem; font-weight: 700;">
+                <span id="tourStepBadge">Step 1 of 8</span>
+            </span>
+        </div>
+        <button type="button" class="tour-close-btn" id="tourCloseBtn" aria-label="Skip Tour" title="Skip Tour">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    
+    <div class="tour-body mb-2">
+        <h6 class="tour-title fw-bold text-white mb-1" id="tourTitle">1. Question Palette Icon</h6>
+        <p class="tour-text small mb-0" id="tourDesc">Tap this 9-dot grid icon to view all questions and jump directly to any question.</p>
+    </div>
+
+    <div class="tour-footer d-flex align-items-center justify-content-between gap-2 pt-2 border-top border-white border-opacity-20 mt-2">
+        <div class="tour-dots d-flex align-items-center gap-1 flex-wrap" id="tourDotsContainer"></div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm text-white-50 p-0" id="tourSkipBtn">
+                Skip
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-light" id="tourPrevBtn" style="display: none;">
+                <i class="fa-solid fa-arrow-left me-1"></i>Back
+            </button>
+            <button type="button" class="btn btn-sm btn-warning fw-bold text-dark shadow-sm" id="tourNextBtn">
+                <span id="tourNextBtnText">Next</span> <i class="fa-solid fa-arrow-right ms-1" id="tourNextBtnIcon"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const examId = {{ exam.id }};
+    const studentId = {{ student.id }};
+    const totalQuestions = {{ total_questions }};
+    const durationMinutes = {{ exam.duration_minutes }};
+    const STORAGE_KEY = `arohan_exam_state_${examId}_${studentId}`;
+
+    let currentQ = 1;
+    let totalSecondsLeft = durationMinutes * 60;
+    let elapsedSeconds = 0;
+    let examStartTime = Date.now();
+
+    // Track status per question
+    const isReviewed = {};
+    const hasAnswer = {};
+    for (let i = 1; i <= totalQuestions; i++) {
+        isReviewed[i] = false;
+        const parent = document.getElementById(`qContainer_${i}`);
+        const checkedRadio = parent ? parent.querySelector('.q-radio:checked') : null;
+        hasAnswer[i] = !!checkedRadio;
+    }
+
+    // State persistence helpers across page refresh
+    function saveExamState() {
+        try {
+            if (examForm && examForm.dataset.arohanSubmitted === 'true') return;
+            const answers = {};
+            for (let i = 1; i <= totalQuestions; i++) {
+                const parent = document.getElementById(`qContainer_${i}`);
+                if (parent) {
+                    const checkedRadio = parent.querySelector('.q-radio:checked');
+                    if (checkedRadio) {
+                        answers[i] = checkedRadio.value;
+                    }
+                }
+            }
+            const state = {
+                examId: examId,
+                studentId: studentId,
+                startTime: examStartTime,
+                answers: answers,
+                reviews: isReviewed,
+                currentQ: currentQ,
+                elapsedSeconds: elapsedSeconds,
+                totalSecondsLeft: totalSecondsLeft,
+                lastSaved: Date.now()
+            };
+            const jsonStr = JSON.stringify(state);
+            sessionStorage.setItem(STORAGE_KEY, jsonStr);
+            localStorage.setItem(STORAGE_KEY, jsonStr);
+        } catch (e) {
+            console.warn('Unable to persist exam state:', e);
+        }
+    }
+
+    function clearExamState() {
+        try {
+            sessionStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+    }
+
+    function restoreExamState() {
+        try {
+            const raw = sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const state = JSON.parse(raw);
+            if (state.examId !== examId || state.studentId !== studentId) return false;
+
+            // Invalidate if saved state is older than 24 hours
+            if (state.lastSaved && (Date.now() - state.lastSaved) > 24 * 60 * 60 * 1000) {
+                clearExamState();
+                return false;
+            }
+
+            // Restore timing
+            if (state.startTime && typeof state.startTime === 'number') {
+                examStartTime = state.startTime;
+                const timePassed = Math.floor((Date.now() - examStartTime) / 1000);
+                if (durationMinutes > 0) {
+                    totalSecondsLeft = Math.max(0, (durationMinutes * 60) - timePassed);
+                    elapsedSeconds = Math.min(durationMinutes * 60, timePassed);
+                } else {
+                    elapsedSeconds = Math.max(state.elapsedSeconds || 0, timePassed);
+                }
+            } else if (state.elapsedSeconds !== undefined) {
+                elapsedSeconds = state.elapsedSeconds;
+                if (durationMinutes > 0 && state.totalSecondsLeft !== undefined) {
+                    totalSecondsLeft = state.totalSecondsLeft;
+                }
+            }
+
+            // Restore selected answers
+            if (state.answers) {
+                Object.keys(state.answers).forEach(qIdx => {
+                    const optVal = state.answers[qIdx];
+                    const parent = document.getElementById(`qContainer_${qIdx}`);
+                    if (parent) {
+                        const optCard = parent.querySelector(`.option-card[data-opt="${optVal}"]`);
+                        const radio = parent.querySelector(`.q-radio[value="${optVal}"]`);
+                        if (optCard) {
+                            parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                            optCard.classList.add('selected');
+                        }
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                        hasAnswer[qIdx] = true;
+                    }
+                });
+            }
+
+            // Restore marked for review
+            if (state.reviews) {
+                Object.keys(state.reviews).forEach(qIdx => {
+                    const idx = parseInt(qIdx, 10);
+                    isReviewed[idx] = !!state.reviews[qIdx];
+                    updateQuestionReviewUI(idx);
+                });
+            }
+
+            // Restore current question position
+            if (state.currentQ && state.currentQ >= 1 && state.currentQ <= totalQuestions) {
+                currentQ = state.currentQ;
+            }
+
+            return true;
+        } catch (e) {
+            console.warn('Unable to restore exam state:', e);
+            return false;
+        }
+    }
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const progressFill = document.getElementById('examProgressFill');
+    const offcanvasEl = document.getElementById('paletteOffcanvas');
+    let bsOffcanvas = offcanvasEl ? bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl) : null;
+
+    function updateBottomReviewBtn(reviewed) {
+        const bottomBtn = document.getElementById('reviewBtn');
+        const bottomIcon = document.getElementById('bottomReviewIcon');
+        const bottomText = document.getElementById('bottomReviewText');
+        if (!bottomBtn) return;
+
+        if (reviewed) {
+            bottomBtn.classList.remove('not-reviewed');
+            bottomBtn.classList.add('is-reviewed');
+            if (bottomIcon) {
+                bottomIcon.className = 'fa-solid fa-bookmark';
+            }
+            if (bottomText) {
+                bottomText.textContent = 'In Review';
+            }
+        } else {
+            bottomBtn.classList.remove('is-reviewed');
+            bottomBtn.classList.add('not-reviewed');
+            if (bottomIcon) {
+                bottomIcon.className = 'fa-regular fa-bookmark';
+            }
+            if (bottomText) {
+                bottomText.textContent = 'Review';
+            }
+        }
+    }
+
+    function updateQuestionReviewUI(qNum) {
+        const reviewed = !!isReviewed[qNum];
+        const container = document.getElementById(`qContainer_${qNum}`);
+        const badge = document.getElementById(`qNumBadge_${qNum}`);
+        const topBtn = document.getElementById(`topReviewBtn_${qNum}`);
+
+        if (container) {
+            if (reviewed) {
+                container.classList.add('in-review');
+            } else {
+                container.classList.remove('in-review');
+            }
+        }
+
+        if (badge) {
+            if (reviewed) {
+                badge.classList.remove('bg-primary');
+                badge.classList.add('bg-purple');
+            } else {
+                badge.classList.remove('bg-purple');
+                badge.classList.add('bg-primary');
+            }
+        }
+
+
+        if (topBtn) {
+            if (reviewed) {
+                topBtn.classList.remove('not-reviewed');
+                topBtn.classList.add('is-reviewed');
+                topBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> <span class="review-btn-text">In Review</span>';
+            } else {
+                topBtn.classList.remove('is-reviewed');
+                topBtn.classList.add('not-reviewed');
+                topBtn.innerHTML = '<i class="fa-regular fa-bookmark"></i> <span class="review-btn-text">Review</span>';
+            }
+        }
+
+        if (qNum === currentQ) {
+            updateBottomReviewBtn(reviewed);
+        }
+    }
+
+    function toggleReview(qNum) {
+        if (qNum < 1 || qNum > totalQuestions) return;
+        isReviewed[qNum] = !isReviewed[qNum];
+        updateQuestionReviewUI(qNum);
+        updatePalette();
+        saveExamState();
+    }
+
+    function showQuestion(qNum) {
+        if (qNum < 1 || qNum > totalQuestions) return;
+
+        // Hide all
+        document.querySelectorAll('.question-container').forEach(el => el.style.display = 'none');
+
+        // Show target
+        const targetEl = document.getElementById(`qContainer_${qNum}`);
+        if (targetEl) targetEl.style.display = 'block';
+
+        // Update active palette buttons
+        document.querySelectorAll('.palette-btn-shared').forEach(b => b.classList.remove('active-q'));
+        const dBtn = document.getElementById(`desktopPaletteBtn_${qNum}`);
+        const mBtn = document.getElementById(`mobilePaletteBtn_${qNum}`);
+        if (dBtn) dBtn.classList.add('active-q');
+        if (mBtn) mBtn.classList.add('active-q');
+
+        currentQ = qNum;
+
+        // Sync bottom review button state for the active question
+        updateBottomReviewBtn(!!isReviewed[currentQ]);
+
+        // Update Nav Buttons
+        prevBtn.disabled = (currentQ === 1);
+        if (currentQ === totalQuestions) {
+            nextBtn.innerHTML = 'Last Q <i class="fa-solid fa-flag-checkered ms-1"></i>';
+        } else {
+            nextBtn.innerHTML = 'Next <i class="fa-solid fa-chevron-right ms-1"></i>';
+        }
+
+        // Progress bar percentage
+        const pct = ((currentQ / totalQuestions) * 100);
+        progressFill.style.width = `${pct}%`;
+
+        saveExamState();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Attach Palette Clicks (Desktop and Mobile)
+    document.querySelectorAll('.palette-btn-shared').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const target = parseInt(this.dataset.target);
+            showQuestion(target);
+            if (bsOffcanvas) {
+                bsOffcanvas.hide();
+            }
+        });
+    });
+
+    // Prev / Next
+    prevBtn.addEventListener('click', function () {
+        if (currentQ > 1) showQuestion(currentQ - 1);
+    });
+
+    nextBtn.addEventListener('click', function () {
+        if (currentQ < totalQuestions) {
+            showQuestion(currentQ + 1);
+        } else {
+            // Last question: open confirm modal
+            updatePalette();
+            submitModal.show();
+        }
+    });
+
+    // Option Selection
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', function () {
+            const qIndex = parseInt(this.dataset.qIndex);
+            const parent = document.getElementById(`qContainer_${qIndex}`);
+
+            parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+
+            const radio = this.querySelector('.q-radio');
+            if (radio) radio.checked = true;
+
+            hasAnswer[qIndex] = true;
+            updatePalette();
+            saveExamState();
+        });
+    });
+
+    // Clear Response
+    clearBtn.addEventListener('click', function () {
+        const parent = document.getElementById(`qContainer_${currentQ}`);
+        if (parent) {
+            parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            parent.querySelectorAll('.q-radio').forEach(r => r.checked = false);
+        }
+
+        hasAnswer[currentQ] = false;
+        updatePalette();
+        saveExamState();
+    });
+
+    // Top Review Toggle Buttons for each question
+    document.querySelectorAll('.top-review-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const qIndex = parseInt(this.dataset.qIndex);
+            toggleReview(qIndex);
+        });
+    });
+
+    // Bottom Toolbar Review Toggle Button
+    if (reviewBtn) {
+        reviewBtn.addEventListener('click', function () {
+            toggleReview(currentQ);
+        });
+    }
+
+    // Update Palette & Badges
+    function updatePalette() {
+        let answered = 0;
+        let unanswered = 0;
+        let reviewed = 0;
+
+        for (let i = 1; i <= totalQuestions; i++) {
+            const dBtn = document.getElementById(`desktopPaletteBtn_${i}`);
+            const mBtn = document.getElementById(`mobilePaletteBtn_${i}`);
+            
+            [dBtn, mBtn].forEach(b => {
+                if (!b) return;
+                b.classList.remove('answered', 'unanswered', 'reviewed');
+                if (isReviewed[i]) {
+                    b.classList.add('reviewed');
+                } else if (hasAnswer[i]) {
+                    b.classList.add('answered');
+                } else {
+                    b.classList.add('unanswered');
+                }
+            });
+
+            if (isReviewed[i]) {
+                reviewed++;
+            } else if (hasAnswer[i]) {
+                answered++;
+            } else {
+                unanswered++;
+            }
+        }
+
+        document.querySelectorAll('.answeredCount').forEach(el => el.textContent = answered);
+        document.querySelectorAll('.unansweredCount').forEach(el => el.textContent = unanswered);
+        document.querySelectorAll('.reviewedCount').forEach(el => el.textContent = reviewed);
+
+        const mAns = document.getElementById('modalAnswered');
+        const mUnans = document.getElementById('modalUnanswered');
+        const mRev = document.getElementById('modalReviewed');
+        if (mAns) mAns.textContent = answered;
+        if (mUnans) mUnans.textContent = unanswered;
+        if (mRev) mRev.textContent = reviewed;
+    }
+
+    // Modal
+    const submitModalEl = document.getElementById('submitConfirmModal');
+    const submitModal = submitModalEl ? bootstrap.Modal.getOrCreateInstance(submitModalEl) : null;
+    document.querySelectorAll('.openSubmitModalTrigger').forEach(el => {
+        el.addEventListener('click', function () {
+            if (bsOffcanvas) {
+                try { bsOffcanvas.hide(); } catch (e) {}
+            }
+            updatePalette();
+            if (submitModal) {
+                submitModal.show();
+            }
+        });
+    });
+
+    // Timer Countdown & 1-Minute Warning
+    const timerDisplay = document.getElementById('examTimer');
+    const timerText = document.getElementById('timerText');
+    const timeTakenInput = document.getElementById('timeTakenSeconds');
+    const examForm = document.getElementById('examForm');
+    const warningBanner = document.getElementById('oneMinuteWarningBanner');
+    const warningCountdownEl = document.getElementById('warningBannerCountdown');
+    const btnDismissWarning = document.getElementById('btnDismiss1MinWarning');
+    const autoSubmitOverlay = document.getElementById('autoSubmitOverlay');
+
+    let warningTriggered = false;
+
+    if (btnDismissWarning) {
+        btnDismissWarning.addEventListener('click', function () {
+            if (warningBanner) {
+                warningBanner.style.display = 'none';
+            }
+        });
+    }
+
+    function checkOneMinuteWarning() {
+        if (totalSecondsLeft <= 60 && totalSecondsLeft > 0) {
+            if (!warningTriggered) {
+                warningTriggered = true;
+                if (warningBanner) {
+                    warningBanner.style.display = 'block';
+                }
+                if (timerDisplay) {
+                    timerDisplay.classList.remove('timer-warning');
+                    timerDisplay.classList.add('timer-urgent-1min');
+                }
+                if ('vibrate' in navigator) {
+                    try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+                }
+            }
+            if (warningCountdownEl) {
+                warningCountdownEl.textContent = totalSecondsLeft;
+            }
+        }
+    }
+
+    function executeAutoSubmit() {
+        if (examForm.dataset.arohanSubmitted === 'true') return;
+        examForm.dataset.arohanSubmitted = 'true';
+        clearExamState();
+        timeTakenInput.value = elapsedSeconds;
+
+        if (warningBanner) warningBanner.style.display = 'none';
+
+        try { if (submitModal) submitModal.hide(); } catch (e) {}
+        try { if (bsOffcanvas) bsOffcanvas.hide(); } catch (e) {}
+
+        if (autoSubmitOverlay) {
+            const autoTitle = autoSubmitOverlay.querySelector('h4');
+            const autoDesc = autoSubmitOverlay.querySelector('p');
+            if (autoTitle) autoTitle.textContent = 'Time Expired!';
+            if (autoDesc) autoDesc.textContent = 'Exam countdown is over. Submitting your mock test automatically...';
+            autoSubmitOverlay.style.display = 'flex';
+        }
+
+        const finalBtn = document.getElementById('finalSubmitBtn');
+        if (finalBtn) {
+            finalBtn.disabled = true;
+            finalBtn.classList.add('disabled');
+            finalBtn.style.pointerEvents = 'none';
+        }
+
+        setTimeout(function () {
+            examForm.submit();
+        }, 400);
+    }
+
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    if (durationMinutes > 0) {
+        timerText.textContent = formatTime(totalSecondsLeft);
+        checkOneMinuteWarning();
+
+        const interval = setInterval(function () {
+            totalSecondsLeft--;
+            elapsedSeconds++;
+            timeTakenInput.value = elapsedSeconds;
+            timerText.textContent = formatTime(totalSecondsLeft);
+
+            if (totalSecondsLeft <= 300 && totalSecondsLeft > 60) {
+                timerDisplay.classList.add('timer-warning');
+            }
+
+            checkOneMinuteWarning();
+
+            if (elapsedSeconds % 5 === 0) {
+                saveExamState();
+            }
+
+            if (totalSecondsLeft <= 0) {
+                clearInterval(interval);
+                executeAutoSubmit();
+            }
+        }, 1000);
+    } else {
+        const interval = setInterval(function () {
+            elapsedSeconds++;
+            timeTakenInput.value = elapsedSeconds;
+            timerText.textContent = formatTime(elapsedSeconds);
+            if (elapsedSeconds % 5 === 0) {
+                saveExamState();
+            }
+        }, 1000);
+    }
+
+    const finalBtn = document.getElementById('finalSubmitBtn');
+    if (finalBtn) {
+        finalBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (this.disabled) return;
+
+            // Ensure dataset flag is set to prevent beforeunload trigger
+            examForm.dataset.arohanSubmitted = 'true';
+            clearExamState();
+            timeTakenInput.value = elapsedSeconds;
+
+            // Button feedback
+            this.disabled = true;
+            this.classList.add('disabled');
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+
+            // Hide confirmation modal & drawer
+            if (submitModal) {
+                try { submitModal.hide(); } catch (err) {}
+            }
+            if (bsOffcanvas) {
+                try { bsOffcanvas.hide(); } catch (err) {}
+            }
+
+            // Display submission loading overlay
+            if (autoSubmitOverlay) {
+                const autoTitle = autoSubmitOverlay.querySelector('h4');
+                const autoDesc = autoSubmitOverlay.querySelector('p');
+                if (autoTitle) autoTitle.textContent = 'Submitting Mock Test...';
+                if (autoDesc) autoDesc.textContent = 'Please wait while your answers are being evaluated and your scorecard is prepared.';
+                autoSubmitOverlay.style.display = 'flex';
+            }
+
+            // Explicitly submit the form
+            setTimeout(function () {
+                examForm.submit();
+            }, 100);
+        });
+    }
+
+    examForm.addEventListener('submit', function () {
+        examForm.dataset.arohanSubmitted = 'true';
+        clearExamState();
+        timeTakenInput.value = elapsedSeconds;
+    });
+
+    // ==========================================
+    // GUIDED CBT EXAM TOUR ENGINE
+    // ==========================================
+    const tourSpotlightBox = document.getElementById('tourSpotlightBox');
+    const tourTooltipCard = document.getElementById('tourTooltipCard');
+    const tourArrow = document.getElementById('tourArrow');
+    const tourStepBadge = document.getElementById('tourStepBadge');
+    const tourTitle = document.getElementById('tourTitle');
+    const tourDesc = document.getElementById('tourDesc');
+    const tourDotsContainer = document.getElementById('tourDotsContainer');
+    const tourCloseBtn = document.getElementById('tourCloseBtn');
+    const tourSkipBtn = document.getElementById('tourSkipBtn');
+    const tourPrevBtn = document.getElementById('tourPrevBtn');
+    const tourNextBtn = document.getElementById('tourNextBtn');
+    const tourNextBtnText = document.getElementById('tourNextBtnText');
+    const tourNextBtnIcon = document.getElementById('tourNextBtnIcon');
+    const btnExamTour = document.getElementById('btnExamTour');
+
+    let isTourActive = false;
+    let currentTourIndex = 0;
+
+    const isMobileView = () => window.innerWidth < 992;
+
+    function getTourSteps() {
+        if (isMobileView()) {
+            return [
+                {
+                    step: 1,
+                    title: "1. Question Palette Icon",
+                    desc: "Tap this 9-dot grid icon to open the Question Palette and jump directly to any question.",
+                    getTarget: () => document.getElementById('paletteToggleBtn'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 2,
+                    title: "2. Question Palette Grid",
+                    desc: "Here is your Question Palette! Green = Answered, Orange = Pending, Purple = In Review. Tap any question number to jump to it instantly.",
+                    getTarget: () => document.getElementById('mobilePaletteGrid') || document.querySelector('#paletteOffcanvas .offcanvas-body'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.show(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 3,
+                    title: "3. Choose Your Answer",
+                    desc: "Tap any option (A, B, C, or D) to select your answer. You can change your choice anytime before final submission.",
+                    getTarget: () => document.getElementById(`optionsWrapper_${currentQ}`) || document.querySelector('.options-wrapper'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                        showQuestion(currentQ || 1);
+                    }
+                },
+                {
+                    step: 4,
+                    title: "4. Mark for Review",
+                    desc: "Uncertain about an answer? Tap Review (bookmark icon) to flag it. It turns purple on the palette so you can re-check later.",
+                    getTarget: () => document.getElementById('reviewBtn'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 5,
+                    title: "5. Clear Response",
+                    desc: "Want to reset your choice? Tap Clear (eraser icon) to deselect your option and leave the question unanswered.",
+                    getTarget: () => document.getElementById('clearBtn'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 6,
+                    title: "6. Back / Previous Question",
+                    desc: "Tap Back (<) to return to the previous question and modify or review your answers.",
+                    getTarget: () => document.getElementById('prevBtn'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 7,
+                    title: "7. Next Question",
+                    desc: "Tap Next (>) to proceed forward. On the final question, this button opens the final submission dialog.",
+                    getTarget: () => document.getElementById('nextBtn'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                },
+                {
+                    step: 8,
+                    title: "8. Final Submission",
+                    desc: "Finished answering? Tap Submit to review your completed count and generate your scorecard report!",
+                    getTarget: () => document.getElementById('bottomSubmitBtn') || document.querySelector('.openSubmitModalTrigger'),
+                    beforeShow: () => {
+                        if (bsOffcanvas) {
+                            try { bsOffcanvas.hide(); } catch (e) {}
+                        }
+                    }
+                }
+            ];
+        } else {
+            return [
+                {
+                    step: 1,
+                    title: "1. Question Palette",
+                    desc: "All questions are listed here! Green = Answered, Orange = Pending, Purple = In Review. Click any question number to jump to it instantly.",
+                    getTarget: () => document.getElementById('desktopPaletteCard') || document.getElementById('desktopPaletteGrid'),
+                    beforeShow: () => {}
+                },
+                {
+                    step: 2,
+                    title: "2. Choose Your Answer",
+                    desc: "Click any option (A, B, C, or D) to select your answer. You can change your choice anytime before final submission.",
+                    getTarget: () => document.getElementById(`optionsWrapper_${currentQ}`) || document.querySelector('.options-wrapper'),
+                    beforeShow: () => {
+                        showQuestion(currentQ || 1);
+                    }
+                },
+                {
+                    step: 3,
+                    title: "3. Mark for Review",
+                    desc: "Uncertain about an answer? Click Review (bookmark icon) to flag it. It turns purple on the palette so you can re-check later.",
+                    getTarget: () => document.getElementById('reviewBtn'),
+                    beforeShow: () => {}
+                },
+                {
+                    step: 4,
+                    title: "4. Clear Response",
+                    desc: "Want to reset your choice? Click Clear (eraser icon) to deselect your option and leave the question unanswered.",
+                    getTarget: () => document.getElementById('clearBtn'),
+                    beforeShow: () => {}
+                },
+                {
+                    step: 5,
+                    title: "5. Back / Previous Question",
+                    desc: "Click Back (<) to return to earlier questions and check or modify your answers.",
+                    getTarget: () => document.getElementById('prevBtn'),
+                    beforeShow: () => {}
+                },
+                {
+                    step: 6,
+                    title: "6. Next Question",
+                    desc: "Click Next (>) to proceed forward. On the final question, this button opens the final submission dialog.",
+                    getTarget: () => document.getElementById('nextBtn'),
+                    beforeShow: () => {}
+                },
+                {
+                    step: 7,
+                    title: "7. Final Submission",
+                    desc: "Finished answering? Click Submit to review your completed count and generate your scorecard report!",
+                    getTarget: () => document.getElementById('bottomSubmitBtn') || document.querySelector('.openSubmitModalTrigger'),
+                    beforeShow: () => {}
+                }
+            ];
+        }
+    }
+
+    function buildTourDots(steps) {
+        if (!tourDotsContainer) return;
+        tourDotsContainer.innerHTML = '';
+        steps.forEach((s, idx) => {
+            const dot = document.createElement('span');
+            dot.className = `tour-dot ${idx === currentTourIndex ? 'active' : ''}`;
+            dot.dataset.step = idx;
+            dot.title = s.title;
+            tourDotsContainer.appendChild(dot);
+        });
+    }
+
+    function positionTourElements() {
+        if (!isTourActive) return;
+        const steps = getTourSteps();
+        const currentStepObj = steps[currentTourIndex];
+        if (!currentStepObj) return;
+
+        const target = currentStepObj.getTarget();
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return;
+
+        const pad = 6;
+        const spotTop = Math.max(2, rect.top - pad);
+        const spotLeft = Math.max(2, rect.left - pad);
+        const spotWidth = Math.min(window.innerWidth - (spotLeft + 2), rect.width + (pad * 2));
+        const spotHeight = rect.height + (pad * 2);
+
+        tourSpotlightBox.style.top = `${spotTop}px`;
+        tourSpotlightBox.style.left = `${spotLeft}px`;
+        tourSpotlightBox.style.width = `${spotWidth}px`;
+        tourSpotlightBox.style.height = `${spotHeight}px`;
+
+        const tooltipWidth = Math.min(window.innerWidth - 24, 340);
+        tourTooltipCard.style.width = `${tooltipWidth}px`;
+        const tooltipHeight = tourTooltipCard.offsetHeight || 150;
+
+        const spaceBelow = window.innerHeight - (spotTop + spotHeight);
+        const spaceAbove = spotTop;
+        const isBottomFixed = !!target.closest('.cbt-bottom-bar');
+        const isTopFixed = !!target.closest('.cbt-mobile-bar');
+
+        let tooltipTop = 0;
+        let arrowClass = 'arrow-up';
+
+        if (isBottomFixed || (spaceBelow < (tooltipHeight + 16) && spaceAbove > tooltipHeight)) {
+            // Position above target
+            tooltipTop = Math.max(8, spotTop - tooltipHeight - 12);
+            arrowClass = 'arrow-down';
+        } else {
+            // Position below target
+            tooltipTop = Math.min(window.innerHeight - tooltipHeight - 8, spotTop + spotHeight + 12);
+            arrowClass = 'arrow-up';
+        }
+
+        let tooltipLeft = spotLeft + (spotWidth / 2) - (tooltipWidth / 2);
+        tooltipLeft = Math.max(12, Math.min(tooltipLeft, window.innerWidth - tooltipWidth - 12));
+
+        tourTooltipCard.style.top = `${tooltipTop}px`;
+        tourTooltipCard.style.left = `${tooltipLeft}px`;
+
+        tourArrow.className = `tour-arrow ${arrowClass}`;
+
+        const arrowTargetX = spotLeft + (spotWidth / 2);
+        const arrowLeft = Math.min(Math.max(16, arrowTargetX - tooltipLeft - 8), tooltipWidth - 32);
+        tourArrow.style.left = `${arrowLeft}px`;
+    }
+
+    function goToTourStep(index) {
+        const steps = getTourSteps();
+        if (index < 0 || index >= steps.length) {
+            endTour(true);
+            return;
+        }
+        currentTourIndex = index;
+        const stepObj = steps[currentTourIndex];
+
+        if (stepObj.beforeShow) {
+            stepObj.beforeShow();
+        }
+
+        tourStepBadge.textContent = `Step ${stepObj.step} of ${steps.length}`;
+        tourTitle.textContent = stepObj.title;
+        tourDesc.textContent = stepObj.desc;
+
+        if (currentTourIndex > 0) {
+            tourPrevBtn.style.display = 'inline-flex';
+        } else {
+            tourPrevBtn.style.display = 'none';
+        }
+
+        if (currentTourIndex === steps.length - 1) {
+            tourNextBtnText.textContent = 'Got it!';
+            tourNextBtnIcon.className = 'fa-solid fa-check ms-1';
+        } else {
+            tourNextBtnText.textContent = 'Next';
+            tourNextBtnIcon.className = 'fa-solid fa-arrow-right ms-1';
+        }
+
+        buildTourDots(steps);
+
+        tourSpotlightBox.style.display = 'block';
+        tourTooltipCard.style.display = 'block';
+
+        const target = stepObj.getTarget();
+        if (target) {
+            const isFixed = target.closest('.cbt-bottom-bar') || target.closest('.cbt-mobile-bar') || target.closest('.offcanvas');
+            if (!isFixed) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        positionTourElements();
+        setTimeout(positionTourElements, 150);
+        setTimeout(positionTourElements, 350);
+    }
+
+    function startTour(force = false) {
+        if (!force && localStorage.getItem('arohan_cbt_exam_tour_seen')) {
+            return;
+        }
+        isTourActive = true;
+        goToTourStep(0);
+    }
+
+    function endTour(saveSeen = true) {
+        isTourActive = false;
+        if (tourSpotlightBox) tourSpotlightBox.style.display = 'none';
+        if (tourTooltipCard) tourTooltipCard.style.display = 'none';
+        if (bsOffcanvas) {
+            try { bsOffcanvas.hide(); } catch (e) {}
+        }
+        if (saveSeen) {
+            localStorage.setItem('arohan_cbt_exam_tour_seen', 'true');
+        }
+    }
+
+    // Step 1 Palette toggle click listener to automatically advance
+    const paletteToggleBtn = document.getElementById('paletteToggleBtn');
+    if (paletteToggleBtn) {
+        paletteToggleBtn.addEventListener('click', function () {
+            if (isTourActive && currentTourIndex === 0 && isMobileView()) {
+                setTimeout(() => {
+                    if (isTourActive) goToTourStep(1);
+                }, 300);
+            }
+        });
+    }
+
+    if (offcanvasEl) {
+        offcanvasEl.addEventListener('hidden.bs.offcanvas', function () {
+            if (isTourActive && currentTourIndex === 1 && isMobileView()) {
+                goToTourStep(2);
+            }
+        });
+    }
+
+    if (tourCloseBtn) tourCloseBtn.addEventListener('click', () => endTour(true));
+    if (tourSkipBtn) tourSkipBtn.addEventListener('click', () => endTour(true));
+    if (tourPrevBtn) tourPrevBtn.addEventListener('click', () => goToTourStep(currentTourIndex - 1));
+    if (tourNextBtn) tourNextBtn.addEventListener('click', () => {
+        const steps = getTourSteps();
+        if (currentTourIndex === steps.length - 1) {
+            endTour(true);
+        } else {
+            goToTourStep(currentTourIndex + 1);
+        }
+    });
+
+    if (tourDotsContainer) {
+        tourDotsContainer.addEventListener('click', function (e) {
+            const dot = e.target.closest('.tour-dot');
+            if (dot && dot.dataset.step !== undefined) {
+                goToTourStep(parseInt(dot.dataset.step, 10));
+            }
+        });
+    }
+
+    if (btnExamTour) {
+        btnExamTour.addEventListener('click', function () {
+            startTour(true);
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        if (isTourActive) positionTourElements();
+    });
+
+    window.addEventListener('scroll', function () {
+        if (isTourActive) positionTourElements();
+    }, { passive: true });
+
+    // Auto-launch tour on first exam visit
+    if (!localStorage.getItem('arohan_cbt_exam_tour_seen')) {
+        setTimeout(function () {
+            startTour(false);
+        }, 500);
+    }
+
+    // Restore previous session if page reloaded
+    const wasRestored = restoreExamState();
+    if (!wasRestored) {
+        examStartTime = Date.now();
+        saveExamState();
+    }
+
+    // Init
+    showQuestion(currentQ);
+    updatePalette();
+
+    window.addEventListener('beforeunload', function (e) {
+        if (examForm && examForm.dataset.arohanSubmitted !== 'true') {
+            saveExamState();
+        }
+    });
+});
+</script>
+{% endblock %}

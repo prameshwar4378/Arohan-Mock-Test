@@ -1,0 +1,1971 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Arohan Academy - Mock Test Examination Desk | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Mobile-first enhancements for Student Portal */
+    .hero-mobile {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        border-radius: 16px;
+        padding: 1.1rem 1.25rem;
+        color: #ffffff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (min-width: 768px) {
+        .hero-mobile {
+            padding: 1.25rem 1.75rem;
+            margin-bottom: 1.75rem;
+            border-radius: 18px;
+        }
+    }
+
+    /* Enhanced Wizard Step Cards - Generous spacing & clean structure */
+    .wizard-step-section {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.35rem 1.25rem;
+        margin-bottom: 1.75rem;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    @media (min-width: 768px) {
+        .wizard-step-section {
+            border-radius: 20px;
+            padding: 1.75rem 2rem;
+            margin-bottom: 2.25rem;
+        }
+    }
+
+    .wizard-step-section:focus-within {
+        border-color: #93c5fd;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
+    }
+
+    .step-header-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .step-header-wrapper label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .step-pill {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.88rem;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        flex-shrink: 0;
+    }
+
+    .step-header-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.2px;
+        line-height: 1.35;
+    }
+
+    @media (max-width: 575.98px) {
+        .wizard-step-section {
+            padding: 1.1rem 0.95rem;
+            border-radius: 16px;
+            margin-bottom: 1.25rem;
+        }
+
+        .step-pill {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            font-size: 0.82rem;
+        }
+
+        .step-header-title {
+            font-size: 0.98rem;
+        }
+
+        .subject-pill-card {
+            padding: 0.75rem 0.9rem !important;
+            border-radius: 12px !important;
+        }
+
+        .subject-icon-box {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            margin-right: 12px !important;
+            border-radius: 10px !important;
+            font-size: 1rem !important;
+        }
+
+        .student-item-card {
+            padding: 0.75rem 0.85rem !important;
+            gap: 10px !important;
+        }
+
+        .student-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            font-size: 0.82rem !important;
+        }
+
+        .exam-status-pills {
+            padding: 3px !important;
+            border-radius: 12px !important;
+            gap: 4px !important;
+        }
+
+        .exam-status-pills .nav-link {
+            padding: 0.5rem 0.35rem !important;
+            font-size: 0.8rem !important;
+            border-radius: 9px !important;
+            gap: 4px !important;
+        }
+
+        .exam-status-pills .badge {
+            font-size: 0.72rem !important;
+            padding: 2px 6px !important;
+        }
+
+        .exam-mobile-card {
+            padding: 0.95rem 1rem !important;
+            border-radius: 14px !important;
+        }
+    }
+
+    /* Student list items - spacious and touchable */
+    .student-item-card {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.15rem;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        touch-action: manipulation;
+    }
+
+    .student-item-card:hover, .student-item-card:active {
+        border-color: #93c5fd;
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    .student-item-card.selected {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16);
+    }
+
+    .student-avatar {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        border-radius: 50%;
+        background: #e0f2fe;
+        color: #0369a1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .student-item-card.selected .student-avatar {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    /* Subject Selection Cards - spacious with clear icon */
+    .subject-pill-card {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.15rem;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    .subject-pill-card:hover, .subject-pill-card:active {
+        border-color: #93c5fd;
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    .subject-pill-card.selected {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16);
+    }
+
+    .subject-icon-box {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 12px;
+        background: #e0e7ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+        margin-right: 14px;
+        transition: all 0.2s;
+    }
+
+    .subject-pill-card.selected .subject-icon-box {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    /* Exam Cards - comfortable padding and breathing room */
+    .exam-mobile-card {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.15rem 1.25rem;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        touch-action: manipulation;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .exam-mobile-card:hover, .exam-mobile-card:active {
+        border-color: #93c5fd;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    .exam-mobile-card.selected {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.14);
+    }
+
+    /* Segmented Tabs for Pending vs Attempted Tests */
+    .exam-status-pills {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 4px;
+        border-radius: 14px;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 6px;
+    }
+
+    .exam-status-pills .nav-item {
+        flex: 1 1 50%;
+        min-width: 0;
+    }
+
+    .exam-status-pills .nav-link {
+        border-radius: 10px;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.88rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0.55rem 0.75rem;
+        border: none;
+        white-space: nowrap;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .exam-status-pills .nav-link.active {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .exam-status-pills .nav-link:hover:not(.active) {
+        color: #1e293b;
+        background: rgba(255, 255, 255, 0.6);
+    }
+
+    .exam-mobile-card.exam-pending {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .exam-mobile-card.exam-attempted {
+        border-left: 4px solid #10b981;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #b45309;
+        font-weight: 700;
+        font-size: 0.72rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .badge-attempted {
+        background: #dcfce7;
+        color: #15803d;
+        font-weight: 700;
+        font-size: 0.72rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    /* Last Result Pill Button in Best Score Box */
+    .btn-last-result {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px;
+        padding: 4px 12px !important;
+        min-height: unset !important;
+        height: auto !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        color: #1d4ed8 !important;
+        background: #eff6ff !important;
+        border: 1.5px solid #93c5fd !important;
+        border-radius: 9999px !important;
+        text-decoration: none !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+        white-space: nowrap !important;
+        touch-action: manipulation;
+    }
+
+    .btn-last-result:hover, .btn-last-result:active {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28) !important;
+        transform: translateY(-1px);
+    }
+
+    .btn-last-result i {
+        font-size: 0.74rem;
+    }
+
+    /* Floating Bottom Action Bar for Mobile */
+    .mobile-sticky-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        padding: 0.85rem 1.25rem;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.08);
+        z-index: 1030;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+        transform: translateY(120%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mobile-sticky-bar.visible {
+        transform: translateY(0);
+    }
+
+    .mobile-spacer {
+        height: 110px;
+    }
+
+    /* Guided Tour Spotlight & Tooltip Styling */
+    .tour-spotlight-box {
+        position: fixed;
+        z-index: 1085;
+        border: 3px solid #f59e0b;
+        border-radius: 16px;
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 25px rgba(245, 158, 11, 0.5);
+        pointer-events: none;
+        transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: tourSpotlightPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes tourSpotlightPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 12px rgba(245, 158, 11, 0.35);
+        }
+        50% {
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 28px rgba(245, 158, 11, 0.8);
+        }
+    }
+
+    .tour-tooltip-card {
+        position: fixed;
+        z-index: 1090;
+        width: calc(100vw - 28px);
+        max-width: 350px;
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 1rem 1.15rem;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.18);
+        transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        touch-action: manipulation;
+    }
+
+    .tour-arrow {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tour-arrow.arrow-down {
+        bottom: -9px;
+        border-width: 9px 8px 0 8px;
+        border-color: #2563eb transparent transparent transparent;
+    }
+
+    .tour-arrow.arrow-up {
+        top: -9px;
+        border-width: 0 8px 9px 8px;
+        border-color: transparent transparent #1e3a8a transparent;
+    }
+
+    .tour-title {
+        font-size: 0.98rem;
+        letter-spacing: -0.2px;
+    }
+
+    .tour-text {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.83rem;
+        line-height: 1.35;
+    }
+
+    .tour-close-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #ffffff;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+
+    .tour-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+    }
+
+    .tour-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.35);
+        transition: all 0.25s ease;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .tour-dot.active {
+        width: 20px;
+        background: #ffffff;
+    }
+
+    /* Tour Buttons Custom Styling (Fix vertical alignment & height) */
+    .tour-tooltip-card .btn {
+        min-height: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 14px !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        border-radius: 9999px !important;
+        transition: all 0.2s ease !important;
+        box-sizing: border-box !important;
+        white-space: nowrap !important;
+    }
+
+    #tourSkipBtn {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0 8px !important;
+        color: rgba(255, 255, 255, 0.75) !important;
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    #tourSkipBtn:hover {
+        color: #ffffff !important;
+        text-decoration: underline !important;
+    }
+
+    #tourPrevBtn {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        color: #ffffff !important;
+        gap: 6px !important;
+    }
+
+    #tourPrevBtn:hover {
+        background: rgba(255, 255, 255, 0.28) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        color: #ffffff !important;
+    }
+
+    #tourNextBtn {
+        background: #ffffff !important;
+        border: 1px solid #ffffff !important;
+        color: #1e3a8a !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        gap: 6px !important;
+    }
+
+    #tourNextBtn:hover {
+        background: #f8fafc !important;
+        color: #1d4ed8 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-lg py-3 py-md-4">
+
+    <!-- Quick Guidance Banner -->
+    <div class="hero-mobile">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+            <div>
+                <p class="text-light opacity-90 small mb-0" style="max-width: 680px; font-size: 0.86rem; line-height: 1.5;">
+                    <i class="fa-solid fa-circle-info text-warning me-1"></i> Select your class, choose your name, and take your mock test. Practice anytime with unlimited attempts &amp; instant verification reports.
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center flex-shrink-0">
+                <span class="badge bg-white bg-opacity-10 text-white px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-check text-success me-1"></i> No Login Needed
+                </span>
+                <span class="badge bg-white bg-opacity-10 text-white px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-rotate-right text-warning me-1"></i> Unlimited Retakes
+                </span>
+                <span class="badge bg-white bg-opacity-10 text-white px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-square-check text-info me-1"></i> Instant Verification
+                </span>
+                <button type="button" class="btn btn-sm text-white rounded-pill px-3 py-1 fw-bold d-inline-flex align-items-center gap-1 shadow-sm" id="btnRestartTour" style="background: rgba(245, 158, 11, 0.25); border: 1px solid rgba(245, 158, 11, 0.5); font-size: 0.78rem;">
+                    <i class="fa-solid fa-circle-question text-warning"></i> <span>How It Works (Tour)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Selection Wizard Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <form id="startExamForm">
+                
+                <!-- STEP 1: CLASS SELECTION -->
+                <div class="card-custom wizard-step-section mb-4" id="step1Container">
+                    <div class="step-header-wrapper mb-3">
+                        <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center gap-2" for="classSelect">
+                            <span class="step-pill">1</span>
+                            <span class="step-header-title">Select Your Class / Batch</span>
+                        </label>
+                        <span class="badge bg-primary-subtle text-primary px-2.5 py-1.5 rounded-pill" id="classCountBadge">{{ classes|length }} Classes</span>
+                    </div>
+
+                    <select id="classSelect" name="class_id" class="form-select form-select-lg shadow-sm" required style="font-size: 0.98rem; min-height: 50px; border-radius: 12px; border: 1.5px solid #cbd5e1; padding: 0.65rem 1rem;">
+                        <option value="" selected disabled>-- Choose your Class / Standard --</option>
+                        {% for c in classes %}
+                            <option value="{{ c.id }}" {% if selected_class and selected_class.id == c.id %}selected{% endif %}>
+                                {{ c.name }} {% if c.code %}({{ c.code }}){% endif %} &bull; {{ c.students.count }} Students
+                            </option>
+                        {% empty %}
+                            <option disabled>No classes registered yet. Superuser needs to add classes.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- STEP 2: STUDENT NAME SELECTION (TOUCH-OPTIMIZED LIST) -->
+                <div class="card-custom wizard-step-section mb-4" id="studentSection" style="display: none;">
+                    <div class="step-header-wrapper mb-3">
+                        <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <span class="step-pill">2</span>
+                            <span class="step-header-title">Select Your Name</span>
+                        </label>
+                        <span class="badge bg-success-subtle text-success px-2.5 py-1.5 rounded-pill" id="studentCountBadge">0 Students</span>
+                    </div>
+
+                    <!-- Real-time student search -->
+                    <div class="input-group mb-3 shadow-sm rounded-3 overflow-hidden" style="border: 1.5px solid #cbd5e1;">
+                        <span class="input-group-text bg-light border-0 px-3"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" id="studentFilterInput" class="form-control border-0 py-2.5" placeholder="Type your name or roll number to search..." autocomplete="off" style="min-height: 48px; font-size: 0.95rem;">
+                        <button class="btn btn-light border-0 text-muted px-3" type="button" id="clearFilterBtn" style="display: none;" title="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Scrollable touchable student list -->
+                    <div id="studentsListContainer" class="d-flex flex-column" style="max-height: 280px; overflow-y: auto; padding: 4px; gap: 10px;">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <input type="hidden" name="student_id" id="selectedStudentId" value="">
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2.5 border-top border-light-subtle small">
+                        <span class="text-muted"><i class="fa-solid fa-circle-info me-1 text-primary"></i> Choose your name to select.</span>
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" id="viewStudentHistoryBtn" style="display: none;">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i> Check My Past Attempts &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: SUBJECT SELECTION (SUBJECT-WISE PRACTICE) -->
+                <div class="card-custom wizard-step-section mb-4" id="subjectSection" style="display: none;">
+                    <div class="step-header-wrapper mb-2">
+                        <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <span class="step-pill">3</span>
+                            <span class="step-header-title">Select Subject</span>
+                        </label>
+                        <span class="badge bg-primary-subtle text-primary px-2.5 py-1.5 rounded-pill" id="subjectCountBadge">0 Subjects</span>
+                    </div>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-book-open me-1 text-primary"></i> Choose the subject to view its scheduled mock tests:</p>
+
+                    <!-- Scrollable touchable subjects list -->
+                    <div id="subjectsContainer" class="d-flex flex-column" style="max-height: 280px; overflow-y: auto; padding: 4px; gap: 10px;">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <input type="hidden" name="subject" id="selectedSubjectInput" value="">
+                </div>
+
+                <!-- STEP 4: MOCK TEST SELECTION -->
+                <div class="card-custom wizard-step-section mb-4" id="examSection" style="display: none;">
+                    <div class="step-header-wrapper mb-3">
+                        <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <span class="step-pill">4</span>
+                            <span class="step-header-title">Select Mock Test to Attempt</span>
+                        </label>
+                        <span class="badge bg-info-subtle text-info px-2.5 py-1.5 rounded-pill" id="examCountBadge">0 Tests</span>
+                    </div>
+
+
+                    <!-- Segmented Filter Tabs: Pending (Top side) vs Attempted Tests -->
+                    <div class="exam-tabs-wrapper mb-3.5" id="examTabsWrapper" style="display: none;">
+                        <ul class="nav nav-pills exam-status-pills d-flex flex-nowrap" id="examStatusTabs" role="tablist">
+                            <li class="nav-item flex-fill text-center" role="presentation">
+                                <button class="nav-link active w-100 d-flex align-items-center justify-content-center gap-2" id="tabPendingBtn" type="button" role="tab">
+                                    <i class="fa-solid fa-hourglass-half text-warning"></i>
+                                    <span>Pending</span>
+                                    <span class="badge bg-warning text-dark rounded-pill px-2" id="pendingCountBadge">0</span>
+                                </button>
+                            </li>
+                            <li class="nav-item flex-fill text-center" role="presentation">
+                                <button class="nav-link w-100 d-flex align-items-center justify-content-center gap-2" id="tabAttemptedBtn" type="button" role="tab">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Attempted</span>
+                                    <span class="badge bg-success text-white rounded-pill px-2" id="attemptedCountBadge">0</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="examsContainer" class="d-flex flex-column gap-3">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <input type="hidden" name="exam_id" id="selectedExamId" value="">
+                </div>
+
+                <!-- Inline Action Section (Desktop / Large Screens) -->
+                <div class="mb-4" id="desktopActionSection" style="display: none;">
+                    <button type="submit" class="btn btn-arohan-primary btn-lg w-100 fw-bold py-3.5 shadow-sm rounded-4 d-flex align-items-center justify-content-center" id="desktopStartBtn" disabled style="font-size: 1.05rem;">
+                        <span>Proceed to Test Instructions</span>
+                        <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+
+                <!-- Loading Spinner Card -->
+                <div id="loadingIndicator" class="card-custom wizard-step-section p-4 mb-4 text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted small mb-0">Loading students and mock tests for selected class...</p>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="mobile-spacer"></div>
+
+</div>
+
+<!-- FLOATING STICKY BOTTOM BAR FOR MOBILE -->
+<div class="mobile-sticky-bar" id="mobileStickyBar">
+    <div class="d-flex align-items-center gap-2 overflow-hidden" style="max-width: 60%;">
+        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold small" style="width: 32px; height: 32px; min-width: 32px;">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="lh-1 text-truncate">
+            <div class="fw-bold small text-dark text-truncate" id="stickyStudentName">Select Student</div>
+            <span class="text-muted" style="font-size: 0.7rem;" id="stickyExamTitle">Select Test</span>
+        </div>
+    </div>
+    <div>
+        <button type="button" class="btn btn-arohan-primary btn-md px-3 fw-bold shadow" id="stickyProceedBtn" disabled>
+            Start Test <i class="fa-solid fa-arrow-right ms-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Guided Tour Spotlight Overlay and Tooltip Card -->
+<div id="tourSpotlightBox" class="tour-spotlight-box" style="display: none;"></div>
+<div id="tourTooltipCard" class="tour-tooltip-card" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+    <div class="tour-arrow" id="tourArrow"></div>
+    <div class="tour-header d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/logo.png' %}" alt="Arohan" class="rounded bg-white p-0.5" style="height: 22px; width: 22px; object-fit: contain;">
+            <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-2 py-0.5" style="font-size: 0.72rem; font-weight: 700;">
+                <span id="tourStepBadge">Step 1 of 5</span>
+            </span>
+        </div>
+        <button type="button" class="tour-close-btn" id="tourCloseBtn" aria-label="Skip Tour" title="Skip Tour">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    
+    <div class="tour-body mb-2">
+        <h6 class="tour-title fw-bold text-white mb-1" id="tourTitle">1. Select Your Class</h6>
+        <p class="tour-text small mb-0" id="tourDesc">Choose your standard or batch from the dropdown.</p>
+    </div>
+
+    <div class="tour-footer d-flex align-items-center justify-content-between gap-2 pt-2 border-top border-white border-opacity-20 mt-2">
+        <!-- Visual Step Dots -->
+        <div class="tour-dots d-flex align-items-center gap-1" id="tourDotsContainer">
+            <span class="tour-dot active" data-step="0"></span>
+            <span class="tour-dot" data-step="1"></span>
+            <span class="tour-dot" data-step="2"></span>
+            <span class="tour-dot" data-step="3"></span>
+            <span class="tour-dot" data-step="4"></span>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm" id="tourSkipBtn">
+                Skip
+            </button>
+            <button type="button" class="btn btn-sm" id="tourPrevBtn" style="display: none;">
+                <i class="fa-solid fa-arrow-left"></i><span>Back</span>
+            </button>
+            <button type="button" class="btn btn-sm shadow-sm" id="tourNextBtn">
+                <span id="tourNextBtnText">Next</span> <i class="fa-solid fa-arrow-right" id="tourNextBtnIcon"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const classSelect = document.getElementById('classSelect');
+    const studentSection = document.getElementById('studentSection');
+    const studentsListContainer = document.getElementById('studentsListContainer');
+    const studentFilterInput = document.getElementById('studentFilterInput');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const studentCountBadge = document.getElementById('studentCountBadge');
+    const selectedStudentIdInput = document.getElementById('selectedStudentId');
+    const viewStudentHistoryBtn = document.getElementById('viewStudentHistoryBtn');
+    
+    const subjectSection = document.getElementById('subjectSection');
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const subjectCountBadge = document.getElementById('subjectCountBadge');
+    const selectedSubjectInput = document.getElementById('selectedSubjectInput');
+
+    const examSection = document.getElementById('examSection');
+    const examsContainer = document.getElementById('examsContainer');
+    const examCountBadge = document.getElementById('examCountBadge');
+    const selectedExamIdInput = document.getElementById('selectedExamId');
+
+    const examTabsWrapper = document.getElementById('examTabsWrapper');
+    const tabPendingBtn = document.getElementById('tabPendingBtn');
+    const tabAttemptedBtn = document.getElementById('tabAttemptedBtn');
+    const pendingCountBadge = document.getElementById('pendingCountBadge');
+    const attemptedCountBadge = document.getElementById('attemptedCountBadge');
+    
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const mobileStickyBar = document.getElementById('mobileStickyBar');
+    const stickyStudentName = document.getElementById('stickyStudentName');
+    const stickyExamTitle = document.getElementById('stickyExamTitle');
+    const stickyProceedBtn = document.getElementById('stickyProceedBtn');
+    
+    const desktopActionSection = document.getElementById('desktopActionSection');
+    const desktopStartBtn = document.getElementById('desktopStartBtn');
+
+    // Values passed from server template context if present
+    const serverClassId = "{{ selected_class.id|default:'' }}";
+    const serverStudentId = "{{ selected_student_id|default:'' }}";
+    const serverSubject = "{{ selected_subject|default:'' }}";
+    const serverExamId = "{{ selected_exam_id|default:'' }}";
+    const serverFilterQuery = "{{ filter_query|default:'' }}";
+
+    let allStudents = [];
+    let allExams = [];
+    let allSubjects = [];
+    let selectedStudent = null;
+    let selectedSubject = null;
+    let selectedExam = null;
+    let studentExamStatusMap = {};
+    let currentExamTab = 'pending'; // 'pending' (default top) or 'attempted'
+
+    // Tab switcher events
+    if (tabPendingBtn) {
+        tabPendingBtn.addEventListener('click', function () {
+            currentExamTab = 'pending';
+            renderExams();
+        });
+    }
+
+    if (tabAttemptedBtn) {
+        tabAttemptedBtn.addEventListener('click', function () {
+            currentExamTab = 'attempted';
+            renderExams();
+        });
+    }
+
+    // Helper: persist state to sessionStorage & update browser URL
+    function persistState(classId, studentId, subject, examId, filterQuery) {
+        if (classId) {
+            sessionStorage.setItem('arohan_class_id', classId);
+        } else {
+            sessionStorage.removeItem('arohan_class_id');
+        }
+
+        if (studentId) {
+            sessionStorage.setItem('arohan_student_id', studentId);
+        } else {
+            sessionStorage.removeItem('arohan_student_id');
+        }
+
+        if (subject) {
+            sessionStorage.setItem('arohan_subject', subject);
+        } else {
+            sessionStorage.removeItem('arohan_subject');
+        }
+
+        if (examId) {
+            sessionStorage.setItem('arohan_exam_id', examId);
+        } else {
+            sessionStorage.removeItem('arohan_exam_id');
+        }
+
+        if (filterQuery !== undefined && filterQuery !== null) {
+            sessionStorage.setItem('arohan_filter_query', filterQuery);
+        }
+
+        // Synchronize browser history / URL bar without reloading
+        const params = new URLSearchParams();
+        if (classId) params.set('class_id', classId);
+        if (studentId) params.set('student_id', studentId);
+        if (subject) params.set('subject', subject);
+        if (examId) params.set('exam_id', examId);
+        if (filterQuery) params.set('q', filterQuery);
+
+        const newSearch = params.toString() ? '?' + params.toString() : window.location.pathname;
+        window.history.replaceState({ classId, studentId, subject, examId, filterQuery }, '', newSearch);
+    }
+
+    // Helper: read state from URL params, server context, or sessionStorage
+    function getStoredState() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('class_id') || serverClassId || sessionStorage.getItem('arohan_class_id') || classSelect.value || '';
+        const studentId = urlParams.get('student_id') || serverStudentId || sessionStorage.getItem('arohan_student_id') || '';
+        const subject = urlParams.get('subject') || serverSubject || sessionStorage.getItem('arohan_subject') || '';
+        const examId = urlParams.get('exam_id') || serverExamId || sessionStorage.getItem('arohan_exam_id') || '';
+        const filterQuery = urlParams.get('q') !== null ? urlParams.get('q') : (serverFilterQuery || sessionStorage.getItem('arohan_filter_query') || '');
+
+        return { classId, studentId, subject, examId, filterQuery };
+    }
+
+    // Helper: map subject name to thematic icon
+    function getSubjectIcon(name) {
+        const n = (name || '').toLowerCase();
+        if (n.includes('math') || n.includes('algebra') || n.includes('geom') || n.includes('arith')) return 'fa-calculator';
+        if (n.includes('sci') || n.includes('physic') || n.includes('chem') || n.includes('bio')) return 'fa-flask';
+        if (n.includes('eng') || n.includes('gramm') || n.includes('marathi') || n.includes('hindi') || n.includes('sanskrit') || n.includes('lang')) return 'fa-book-bookmark';
+        if (n.includes('hist') || n.includes('geog') || n.includes('social') || n.includes('civic')) return 'fa-earth-americas';
+        if (n.includes('comp') || n.includes('tech') || n.includes('code') || n.includes('it')) return 'fa-laptop-code';
+        if (n.includes('art') || n.includes('draw')) return 'fa-palette';
+        return 'fa-book-open';
+    }
+
+    // Render Subjects cards
+    function renderSubjects() {
+        subjectsContainer.innerHTML = '';
+        subjectCountBadge.textContent = `${allSubjects.length} Subjects`;
+
+        if (allSubjects.length === 0) {
+            subjectsContainer.innerHTML = `
+                <div class="p-3 text-center text-muted small bg-light rounded-3">
+                    <i class="fa-solid fa-folder-open text-muted mb-1 fs-5"></i>
+                    <div>No subjects configured for this class yet.</div>
+                </div>
+            `;
+            return;
+        }
+
+        allSubjects.forEach(sub => {
+            const card = document.createElement('div');
+            card.className = 'subject-pill-card';
+            card.dataset.subjectName = sub.name;
+
+            const isSel = selectedSubject && selectedSubject.toLowerCase() === sub.name.toLowerCase();
+            if (isSel) {
+                card.classList.add('selected');
+            }
+
+            const iconClass = getSubjectIcon(sub.name);
+
+            let badgeInfo = '';
+            if (selectedStudent) {
+                const badges = [];
+                if (sub.pending_exams > 0) {
+                    badges.push(`<span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1 small fw-bold">
+                        <i class="fa-solid fa-hourglass-half me-1"></i>${sub.pending_exams} Pending
+                    </span>`);
+                }
+                if (sub.attempted_exams > 0) {
+                    badges.push(`<span class="badge bg-success-subtle text-success-emphasis rounded-pill px-2.5 py-1 small fw-bold">
+                        <i class="fa-solid fa-circle-check me-1"></i>${sub.attempted_exams} Attempted
+                    </span>`);
+                }
+                if (badges.length === 0) {
+                    badges.push(`<span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1 small">0 Tests</span>`);
+                }
+                badgeInfo = badges.join(' ');
+            } else {
+                badgeInfo = `<span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 small fw-bold">${sub.total_exams} Mock Test${sub.total_exams === 1 ? '' : 's'}</span>`;
+            }
+
+            card.innerHTML = `
+                <!-- Special First Row: Status Label & Arrow -->
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        ${badgeInfo}
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted small ${isSel ? 'text-primary' : 'opacity-40'}"></i>
+                </div>
+                <!-- Main Row: Subject Icon + Proper Space + Subject Details -->
+                <div class="d-flex align-items-center w-100">
+                    <div class="subject-icon-box flex-shrink-0">
+                        <i class="fa-solid ${iconClass}"></i>
+                    </div>
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <div class="fw-bold text-dark mb-0.5" style="font-size: 0.95rem; line-height: 1.35; word-break: break-word;">${sub.name}</div>
+                        <div class="text-muted small" style="font-size: 0.77rem;">${sub.total_exams} mock test${sub.total_exams === 1 ? '' : 's'} scheduled</div>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', function () {
+                selectSubject(sub.name, true);
+            });
+
+            subjectsContainer.appendChild(card);
+        });
+    }
+
+    // Select a Subject
+    function selectSubject(subName, shouldAdvanceTour = true) {
+        selectedSubject = subName;
+        selectedSubjectInput.value = subName;
+
+        // Reset selected exam if current exam does not belong to this subject
+        if (selectedExam) {
+            const examSub = (selectedExam.subject || 'General').trim().toLowerCase();
+            const targetSub = subName.trim().toLowerCase();
+            const matches = (examSub === targetSub) || (targetSub === 'general' && (!selectedExam.subject || examSub === 'general'));
+            if (!matches) {
+                selectedExam = null;
+                selectedExamIdInput.value = '';
+            }
+        }
+
+        // Highlight active subject card
+        document.querySelectorAll('.subject-pill-card').forEach(c => {
+            if (c.dataset.subjectName && c.dataset.subjectName.toLowerCase() === subName.toLowerCase()) {
+                c.classList.add('selected');
+                const chev = c.querySelector('.fa-chevron-right');
+                if (chev) {
+                    chev.classList.remove('opacity-50');
+                    chev.classList.add('text-primary');
+                }
+            } else {
+                c.classList.remove('selected');
+                const chev = c.querySelector('.fa-chevron-right');
+                if (chev) {
+                    chev.classList.remove('text-primary');
+                    chev.classList.add('opacity-50');
+                }
+            }
+        });
+
+        // Show Exam Section
+        examSection.style.display = 'block';
+        desktopActionSection.style.setProperty('display', 'flex', 'important');
+
+        // Reset to pending tab by default when switching subject
+        currentExamTab = 'pending';
+        renderExams();
+        updateFlowState();
+
+        if (shouldAdvanceTour && isTourActive && currentTourIndex === 2) {
+            setTimeout(() => {
+                goToTourStep(3);
+            }, 300);
+        }
+
+        persistState(
+            classSelect.value,
+            selectedStudent ? selectedStudent.id : '',
+            selectedSubject,
+            selectedExam ? selectedExam.id : '',
+            studentFilterInput.value.trim()
+        );
+    }
+
+    // Load Class Data and restore selections / filters
+    function loadClassDataAndRestore(classId, targetStudentId, targetSubject, targetExamId, targetFilter) {
+        if (!classId) return;
+
+        loadingIndicator.style.display = 'block';
+        studentSection.style.display = 'none';
+        subjectSection.style.display = 'none';
+        examSection.style.display = 'none';
+
+        const fetchUrl = targetStudentId ? `/api/class-data/${classId}/?student_id=${targetStudentId}` : `/api/class-data/${classId}/`;
+
+        fetch(fetchUrl)
+            .then(res => res.json())
+            .then(data => {
+                loadingIndicator.style.display = 'none';
+                if (!data.success) {
+                    alert('Error loading class data');
+                    return;
+                }
+
+                allStudents = data.students || [];
+                allExams = data.exams || [];
+                allSubjects = data.subjects || [];
+                studentExamStatusMap = data.status_map || {};
+
+                // 1. Restore filter query input
+                const currentFilter = targetFilter !== undefined && targetFilter !== null ? targetFilter : (studentFilterInput.value || '');
+                studentFilterInput.value = currentFilter;
+                if (clearFilterBtn) {
+                    clearFilterBtn.style.display = currentFilter ? 'inline-block' : 'none';
+                }
+
+                // 2. Filter students if query exists
+                let displayStudents = allStudents;
+                if (currentFilter.trim()) {
+                    const q = currentFilter.toLowerCase().trim();
+                    displayStudents = allStudents.filter(s =>
+                        s.name.toLowerCase().includes(q) || (s.roll_number && s.roll_number.toLowerCase().includes(q))
+                    );
+                }
+
+                // 3. Render student cards
+                renderStudents(displayStudents);
+                studentSection.style.display = 'block';
+
+                // 4. Restore selected student, subject, and exam
+                if (targetStudentId) {
+                    const matchStudent = allStudents.find(s => String(s.id) === String(targetStudentId));
+                    if (matchStudent) {
+                        selectStudent(matchStudent, false, true, targetSubject, targetExamId);
+                    }
+                }
+
+                updateFlowState();
+                persistState(
+                    classId,
+                    selectedStudent ? selectedStudent.id : '',
+                    selectedSubject || '',
+                    selectedExam ? selectedExam.id : '',
+                    studentFilterInput.value.trim()
+                );
+
+                if (isTourActive && currentTourIndex === 0) {
+                    setTimeout(() => {
+                        goToTourStep(1);
+                    }, 350);
+                }
+            })
+            .catch(err => {
+                loadingIndicator.style.display = 'none';
+                console.error(err);
+                alert('Could not fetch students for this class.');
+            });
+    }
+
+    // Select a student
+    function selectStudent(s, shouldScroll = true, fetchStatus = true, targetSubject = null, targetExamId = null) {
+        selectedStudent = s;
+        selectedStudentIdInput.value = s.id;
+        stickyStudentName.textContent = s.name;
+        viewStudentHistoryBtn.style.display = 'inline-block';
+
+        document.querySelectorAll('.student-item-card').forEach(c => {
+            if (c.dataset.studentId === String(s.id)) {
+                c.classList.add('selected');
+                const ic = c.querySelector('.student-check-icon i');
+                if (ic) { ic.classList.remove('text-muted', 'opacity-25'); }
+                if (shouldScroll) {
+                    c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                c.classList.remove('selected');
+                const ic = c.querySelector('.student-check-icon i');
+                if (ic) { ic.classList.add('text-muted', 'opacity-25'); }
+            }
+        });
+
+        // Show Subject Section
+        subjectSection.style.display = 'block';
+
+        function handlePostStudentSelect(subjs) {
+            if (subjs && subjs.length > 0) {
+                allSubjects = subjs;
+            }
+            renderSubjects();
+
+            // Determine which subject to select
+            let subjectToSelect = targetSubject || selectedSubject;
+            if (!subjectToSelect && allSubjects.length === 1) {
+                // Auto-select if only 1 subject available
+                subjectToSelect = allSubjects[0].name;
+            }
+
+            if (subjectToSelect) {
+                const found = allSubjects.find(sub => sub.name.toLowerCase() === subjectToSelect.toLowerCase());
+                if (found) {
+                    selectSubject(found.name, false);
+                    if (targetExamId) {
+                        const matchExam = allExams.find(e => String(e.id) === String(targetExamId));
+                        if (matchExam) {
+                            selectExam(matchExam);
+                        }
+                    }
+                } else if (allSubjects.length > 0) {
+                    selectSubject(allSubjects[0].name, false);
+                }
+            } else {
+                // No subject selected yet: hide examSection until student chooses subject
+                examSection.style.display = 'none';
+            }
+
+            updateFlowState();
+
+            if (isTourActive && currentTourIndex === 1) {
+                setTimeout(() => {
+                    goToTourStep(2);
+                }, 300);
+            }
+        }
+
+        if (fetchStatus) {
+            // Fetch real-time attempt status and subject stats for this student
+            fetch(`/api/student-exam-status/${s.id}/`)
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        studentExamStatusMap = resData.status_map || {};
+                        handlePostStudentSelect(resData.subjects);
+                    } else {
+                        handlePostStudentSelect(allSubjects);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching student exam status:', err);
+                    handlePostStudentSelect(allSubjects);
+                });
+        } else {
+            handlePostStudentSelect(allSubjects);
+        }
+
+        persistState(
+            classSelect.value,
+            selectedStudent ? selectedStudent.id : '',
+            selectedSubject || '',
+            selectedExam ? selectedExam.id : '',
+            studentFilterInput.value.trim()
+        );
+    }
+
+    // Select an exam
+    function selectExam(exam) {
+        selectedExam = exam;
+        selectedExamIdInput.value = exam.id;
+        stickyExamTitle.textContent = exam.title;
+
+        document.querySelectorAll('.exam-mobile-card').forEach(c => {
+            if (c.dataset.examId === String(exam.id)) {
+                c.classList.add('selected');
+            } else {
+                c.classList.remove('selected');
+            }
+        });
+
+        updateFlowState();
+        if (isTourActive && currentTourIndex === 3) {
+            setTimeout(() => {
+                goToTourStep(4);
+            }, 300);
+        }
+        persistState(
+            classSelect.value,
+            selectedStudent ? selectedStudent.id : '',
+            selectedSubject || '',
+            selectedExam ? selectedExam.id : '',
+            studentFilterInput.value.trim()
+        );
+    }
+
+    // Manual Class Selection Change
+    classSelect.addEventListener('change', function () {
+        const classId = this.value;
+        if (!classId) return;
+
+        // Reset student, subject, exam, filter, status map
+        selectedStudent = null;
+        selectedSubject = null;
+        selectedExam = null;
+        allSubjects = [];
+        studentExamStatusMap = {};
+        currentExamTab = 'pending';
+        selectedStudentIdInput.value = '';
+        selectedSubjectInput.value = '';
+        selectedExamIdInput.value = '';
+        studentFilterInput.value = '';
+        if (clearFilterBtn) clearFilterBtn.style.display = 'none';
+        stickyStudentName.textContent = 'Select Student';
+        stickyExamTitle.textContent = 'Select Test';
+        viewStudentHistoryBtn.style.display = 'none';
+        mobileStickyBar.classList.remove('visible');
+        subjectSection.style.display = 'none';
+        examSection.style.display = 'none';
+
+        persistState(classId, '', '', '', '');
+        loadClassDataAndRestore(classId, null, null, null, '');
+    });
+
+    // Render Student List
+    function renderStudents(studentsList) {
+        studentsListContainer.innerHTML = '';
+        studentCountBadge.textContent = `${studentsList.length} Students`;
+
+        if (studentsList.length === 0) {
+            studentsListContainer.innerHTML = `
+                <div class="p-3 text-center text-muted small bg-light rounded-3">
+                    No students matching your search in this batch roster.
+                </div>
+            `;
+            return;
+        }
+
+        studentsList.forEach(s => {
+            const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const card = document.createElement('div');
+            card.className = 'student-item-card';
+            card.dataset.studentId = s.id;
+
+            const isSel = selectedStudent && String(selectedStudent.id) === String(s.id);
+            if (isSel) {
+                card.classList.add('selected');
+            }
+
+            card.innerHTML = `
+                <div class="d-flex align-items-center gap-3">
+                    <div class="student-avatar">${initials}</div>
+                    <div>
+                        <div class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">${s.name}</div>
+                        <span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 0.72rem; font-weight: 600;">Roll: ${s.roll_number}</span>
+                    </div>
+                </div>
+                <div class="student-check-icon">
+                    <i class="fa-solid fa-circle-check text-primary fs-5 ${isSel ? '' : 'text-muted opacity-25'}"></i>
+                </div>
+            `;
+
+            card.addEventListener('click', function () {
+                selectStudent(s, false, true);
+            });
+
+            studentsListContainer.appendChild(card);
+        });
+    }
+
+    // Filter Students input
+    studentFilterInput.addEventListener('input', function () {
+        const query = this.value.trim();
+        if (clearFilterBtn) {
+            clearFilterBtn.style.display = query ? 'inline-block' : 'none';
+        }
+
+        const lower = query.toLowerCase();
+        const filtered = allStudents.filter(s =>
+            s.name.toLowerCase().includes(lower) || (s.roll_number && s.roll_number.toLowerCase().includes(lower))
+        );
+        renderStudents(filtered);
+
+        persistState(
+            classSelect.value,
+            selectedStudent ? selectedStudent.id : '',
+            selectedSubject || '',
+            selectedExam ? selectedExam.id : '',
+            query
+        );
+    });
+
+    // Clear Filter Button
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', function () {
+            studentFilterInput.value = '';
+            clearFilterBtn.style.display = 'none';
+            renderStudents(allStudents);
+            studentFilterInput.focus();
+            persistState(
+                classSelect.value,
+                selectedStudent ? selectedStudent.id : '',
+                selectedSubject || '',
+                selectedExam ? selectedExam.id : '',
+                ''
+            );
+        });
+    }
+
+    // Exam Card Creation Helper
+    function createExamCard(exam, status) {
+        const card = document.createElement('div');
+        card.className = 'exam-mobile-card';
+        card.dataset.examId = exam.id;
+
+        const isSel = selectedExam && String(selectedExam.id) === String(exam.id);
+        if (isSel) {
+            card.classList.add('selected');
+        }
+
+        let statusBadgeHtml = '';
+        let extraScoreHtml = '';
+
+        if (status === null) {
+            statusBadgeHtml = `<span class="badge bg-light text-secondary border small"><i class="fa-solid fa-book-open me-1"></i>Available Test</span>`;
+        } else if (status.isAttempted) {
+            card.classList.add('exam-attempted');
+            const countText = status.count > 1 ? `${status.count} times` : '1 time';
+            statusBadgeHtml = `<span class="badge badge-attempted"><i class="fa-solid fa-circle-check me-1"></i> Attempted (${countText})</span>`;
+            extraScoreHtml = `
+                <div class="my-2 p-2 bg-light rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="fa-solid fa-trophy text-warning"></i>
+                        <span class="text-muted">Best Score:</span>
+                        <strong class="text-dark">${status.bestScore} / ${exam.total_marks}</strong>
+                        <span class="badge bg-success-subtle text-success small">${status.bestPercentage}%</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        ${status.latestId ? `<a href="/attempt/${status.latestId}/result/" class="btn-last-result" onclick="event.stopPropagation();" title="View last attempt scorecard and answers"><i class="fa-solid fa-square-poll-vertical"></i>Last Result</a>` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            card.classList.add('exam-pending');
+            statusBadgeHtml = `<span class="badge badge-pending"><i class="fa-solid fa-clock me-1"></i> Not Attempted</span>`;
+        }
+
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start mb-2.5 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <span class="badge bg-primary text-white px-2 py-1" style="font-size: 0.74rem;">${exam.subject || 'Mock Test'}</span>
+                    ${statusBadgeHtml}
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 small">
+                    <i class="fa-solid fa-stopwatch me-1"></i>${exam.duration_minutes > 0 ? exam.duration_minutes + ' Mins' : 'No Limit'}
+                </span>
+            </div>
+            
+            <h6 class="fw-bold text-dark mb-2" style="font-size: 1rem; line-height: 1.4;">${exam.title}</h6>
+            
+            ${extraScoreHtml}
+
+            <div class="d-flex flex-wrap gap-2.5 text-muted small mt-2.5 pt-2 border-top border-light-subtle" style="font-size: 0.8rem;">
+                <span><i class="fa-solid fa-list-check me-1 text-primary"></i>${exam.total_questions} Questions</span>
+                <span>&bull;</span>
+                <span><i class="fa-solid fa-award me-1 text-warning"></i>${exam.total_marks} Marks</span>
+                <span>&bull;</span>
+                <span>Pass: ${exam.passing_percentage}%</span>
+                ${status && status.isAttempted ? `<span class="ms-auto text-primary fw-bold"><i class="fa-solid fa-rotate-right me-1"></i>Retake Test</span>` : ''}
+            </div>
+        `;
+
+        card.addEventListener('click', function () {
+            selectExam(exam);
+        });
+
+        return card;
+    }
+
+    // Render Exams strictly for the selected Subject, Categorized by Pending vs Attempted
+    function renderExams() {
+        examsContainer.innerHTML = '';
+
+        if (!selectedStudent || !selectedSubject) {
+            if (examTabsWrapper) examTabsWrapper.style.display = 'none';
+            examCountBadge.textContent = '0 Tests';
+            return;
+        }
+
+        if (examTabsWrapper) examTabsWrapper.style.display = 'block';
+
+        // Filter tests strictly by selectedSubject
+        const targetSubClean = selectedSubject.trim().toLowerCase();
+        const subjectExams = allExams.filter(e => {
+            const examSubClean = (e.subject || 'General').trim().toLowerCase();
+            return (examSubClean === targetSubClean) || (targetSubClean === 'general' && (!e.subject || examSubClean === 'general'));
+        });
+
+        const pendingExams = subjectExams.filter(e => !studentExamStatusMap[String(e.id)]?.attempted);
+        const attemptedExams = subjectExams.filter(e => studentExamStatusMap[String(e.id)]?.attempted);
+
+        if (pendingCountBadge) pendingCountBadge.textContent = pendingExams.length;
+        if (attemptedCountBadge) attemptedCountBadge.textContent = attemptedExams.length;
+        if (examCountBadge) examCountBadge.textContent = `${subjectExams.length} Test${subjectExams.length === 1 ? '' : 's'}`;
+
+        if (subjectExams.length === 0) {
+            examsContainer.innerHTML = `
+                <div class="alert alert-light border text-center py-4 rounded-3">
+                    <i class="fa-solid fa-folder-open text-muted fs-3 mb-2"></i>
+                    <h6 class="fw-bold text-dark mb-1">No Tests Scheduled</h6>
+                    <p class="mb-0 text-muted small">No mock tests currently scheduled for <strong>${selectedSubject}</strong>.</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (currentExamTab === 'pending') {
+            if (tabPendingBtn) tabPendingBtn.classList.add('active');
+            if (tabAttemptedBtn) tabAttemptedBtn.classList.remove('active');
+
+            if (pendingExams.length === 0) {
+                examsContainer.innerHTML = `
+                    <div class="alert alert-success border-0 text-center py-4 rounded-4 shadow-sm">
+                        <i class="fa-solid fa-circle-check text-success fs-1 mb-2"></i>
+                        <h6 class="fw-bold text-success mb-1">All tests in ${selectedSubject} have been attempted!</h6>
+                        <p class="text-muted small mb-3">Great job! You have attempted all available mock tests for this subject. You can retake any of your tests anytime.</p>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" id="switchAttemptedBtn">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i> View Attempted Tests (${attemptedExams.length}) &rarr;
+                        </button>
+                    </div>
+                `;
+                const swBtn = document.getElementById('switchAttemptedBtn');
+                if (swBtn) {
+                    swBtn.addEventListener('click', () => {
+                        currentExamTab = 'attempted';
+                        renderExams();
+                    });
+                }
+                return;
+            }
+
+            pendingExams.forEach(exam => {
+                const card = createExamCard(exam, { isAttempted: false });
+                examsContainer.appendChild(card);
+            });
+
+        } else {
+            // Attempted Tests tab
+            if (tabAttemptedBtn) tabAttemptedBtn.classList.add('active');
+            if (tabPendingBtn) tabPendingBtn.classList.remove('active');
+
+            if (attemptedExams.length === 0) {
+                examsContainer.innerHTML = `
+                    <div class="alert alert-light border text-center py-4 rounded-4">
+                        <i class="fa-solid fa-clipboard-question text-muted fs-1 mb-2"></i>
+                        <h6 class="fw-bold text-dark mb-1">No Attempted Tests in ${selectedSubject} Yet</h6>
+                        <p class="text-muted small mb-3">You haven't attempted any tests for this subject yet. Start with your pending tests!</p>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" id="switchPendingBtn">
+                            <i class="fa-solid fa-hourglass-half me-1"></i> View Pending Tests (${pendingExams.length}) &rarr;
+                        </button>
+                    </div>
+                `;
+                const swBtn = document.getElementById('switchPendingBtn');
+                if (swBtn) {
+                    swBtn.addEventListener('click', () => {
+                        currentExamTab = 'pending';
+                        renderExams();
+                    });
+                }
+                return;
+            }
+
+            attemptedExams.forEach(exam => {
+                const attInfo = studentExamStatusMap[String(exam.id)];
+                const card = createExamCard(exam, {
+                    isAttempted: true,
+                    count: attInfo.count,
+                    bestScore: attInfo.best_score,
+                    bestPercentage: attInfo.best_percentage,
+                    latestId: attInfo.latest_id
+                });
+                examsContainer.appendChild(card);
+            });
+        }
+    }
+
+    function updateFlowState() {
+        if (selectedStudent && selectedExam) {
+            mobileStickyBar.classList.add('visible');
+            stickyProceedBtn.disabled = false;
+            desktopStartBtn.disabled = false;
+
+            const isAttempted = studentExamStatusMap[String(selectedExam.id)]?.attempted;
+            if (isAttempted) {
+                stickyProceedBtn.innerHTML = 'Retake Test <i class="fa-solid fa-rotate-right ms-1"></i>';
+                desktopStartBtn.innerHTML = '<span>Proceed to Retake Instructions</span> <i class="fa-solid fa-arrow-right ms-2"></i>';
+            } else {
+                stickyProceedBtn.innerHTML = 'Start Test <i class="fa-solid fa-arrow-right ms-1"></i>';
+                desktopStartBtn.innerHTML = '<span>Proceed to Test Instructions</span> <i class="fa-solid fa-arrow-right ms-2"></i>';
+            }
+            stickyStudentName.textContent = selectedStudent.name;
+            stickyExamTitle.textContent = selectedExam.title;
+        } else {
+            stickyProceedBtn.disabled = true;
+            desktopStartBtn.disabled = true;
+            if (selectedStudent) {
+                mobileStickyBar.classList.add('visible');
+                stickyStudentName.textContent = selectedStudent.name;
+                stickyExamTitle.textContent = selectedSubject ? `${selectedSubject} • Pick Test` : 'Select Subject';
+            }
+        }
+    }
+
+    // Start Test Navigation
+    let isStartingTest = false;
+    function startTest() {
+        if (!selectedStudent || !selectedExam) {
+            alert('Please select both your name, a subject, and a mock test.');
+            return;
+        }
+
+        if (isStartingTest) {
+            return;
+        }
+        isStartingTest = true;
+
+        if (desktopStartBtn) {
+            desktopStartBtn.disabled = true;
+            desktopStartBtn.classList.add('disabled');
+            desktopStartBtn.style.pointerEvents = 'none';
+            desktopStartBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span>Opening Test Instructions...</span>';
+        }
+
+        if (stickyProceedBtn) {
+            stickyProceedBtn.disabled = true;
+            stickyProceedBtn.classList.add('disabled');
+            stickyProceedBtn.style.pointerEvents = 'none';
+            stickyProceedBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Loading...';
+        }
+
+        endTour(true);
+        persistState(
+            classSelect.value,
+            selectedStudent.id,
+            selectedSubject || '',
+            selectedExam.id,
+            studentFilterInput.value.trim()
+        );
+        window.location.href = `/exam/${selectedExam.id}/instruction/?student_id=${selectedStudent.id}`;
+    }
+
+    stickyProceedBtn.addEventListener('click', startTest);
+    desktopStartBtn.addEventListener('click', startTest);
+    document.getElementById('startExamForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        startTest();
+    });
+
+    // History Navigation
+    function viewHistory() {
+        if (!selectedStudent) {
+            alert('Please select your name first to check your history.');
+            return;
+        }
+        persistState(
+            classSelect.value,
+            selectedStudent.id,
+            selectedSubject || '',
+            selectedExam ? selectedExam.id : '',
+            studentFilterInput.value.trim()
+        );
+
+        const params = new URLSearchParams();
+        params.set('class_id', classSelect.value);
+        if (selectedSubject) params.set('subject', selectedSubject);
+        if (selectedExam) params.set('exam_id', selectedExam.id);
+        if (studentFilterInput.value.trim()) params.set('q', studentFilterInput.value.trim());
+
+        window.location.href = `/student/${selectedStudent.id}/history/?${params.toString()}`;
+    }
+
+    viewStudentHistoryBtn.addEventListener('click', viewHistory);
+
+    // ==========================================
+    // GUIDED TOUR ENGINE FOR STUDENTS (MOBILE-FIRST)
+    // ==========================================
+    const tourSpotlightBox = document.getElementById('tourSpotlightBox');
+    const tourTooltipCard = document.getElementById('tourTooltipCard');
+    const tourArrow = document.getElementById('tourArrow');
+    const tourStepBadge = document.getElementById('tourStepBadge');
+    const tourTitle = document.getElementById('tourTitle');
+    const tourDesc = document.getElementById('tourDesc');
+    const tourDotsContainer = document.getElementById('tourDotsContainer');
+    const tourCloseBtn = document.getElementById('tourCloseBtn');
+    const tourSkipBtn = document.getElementById('tourSkipBtn');
+    const tourPrevBtn = document.getElementById('tourPrevBtn');
+    const tourNextBtn = document.getElementById('tourNextBtn');
+    const tourNextBtnText = document.getElementById('tourNextBtnText');
+    const tourNextBtnIcon = document.getElementById('tourNextBtnIcon');
+    const btnRestartTour = document.getElementById('btnRestartTour');
+
+    let isTourActive = false;
+    let currentTourIndex = 0;
+
+    const tourSteps = [
+        {
+            step: 1,
+            title: "1. Select Your Class",
+            desc: "Choose your standard or batch from the dropdown.",
+            getTarget: () => document.getElementById('step1Container') || classSelect,
+            beforeShow: () => {}
+        },
+        {
+            step: 2,
+            title: "2. Select Your Name",
+            desc: "Select your name from the student roster, or type to search.",
+            getTarget: () => studentSection,
+            beforeShow: () => {
+                if (!classSelect.value && classSelect.options.length > 1) {
+                    for (let i = 1; i < classSelect.options.length; i++) {
+                        if (classSelect.options[i].value) {
+                            classSelect.selectedIndex = i;
+                            classSelect.dispatchEvent(new Event('change'));
+                            break;
+                        }
+                    }
+                }
+                if (studentSection.style.display === 'none') {
+                    studentSection.style.display = 'block';
+                }
+            }
+        },
+        {
+            step: 3,
+            title: "3. Choose Subject",
+            desc: "Pick a subject to view its scheduled mock tests.",
+            getTarget: () => subjectSection,
+            beforeShow: () => {
+                if (!selectedStudent && allStudents.length > 0) {
+                    selectStudent(allStudents[0], false, false);
+                }
+                if (subjectSection.style.display === 'none') {
+                    subjectSection.style.display = 'block';
+                }
+            }
+        },
+        {
+            step: 4,
+            title: "4. Pick a Mock Test",
+            desc: "Choose a test from Pending or retake from Attempted.",
+            getTarget: () => examSection,
+            beforeShow: () => {
+                if (!selectedSubject && allSubjects.length > 0) {
+                    selectSubject(allSubjects[0].name, false);
+                }
+                if (examSection.style.display === 'none') {
+                    examSection.style.display = 'block';
+                }
+            }
+        },
+        {
+            step: 5,
+            title: "5. Start Test",
+            desc: "Click Start Test to review test instructions and begin.",
+            getTarget: () => {
+                if (window.innerWidth < 768) {
+                    mobileStickyBar.classList.add('visible');
+                    return mobileStickyBar;
+                } else {
+                    desktopActionSection.style.setProperty('display', 'flex', 'important');
+                    return desktopActionSection;
+                }
+            },
+            beforeShow: () => {
+                if (!selectedExam && allExams.length > 0) {
+                    selectExam(allExams[0]);
+                }
+                if (window.innerWidth < 768) {
+                    mobileStickyBar.classList.add('visible');
+                }
+            }
+        }
+    ];
+
+    function positionTourElements() {
+        if (!isTourActive) return;
+        const currentStepObj = tourSteps[currentTourIndex];
+        if (!currentStepObj) return;
+
+        const target = currentStepObj.getTarget();
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return;
+
+        const pad = 6;
+        const spotTop = Math.max(2, rect.top - pad);
+        const spotLeft = Math.max(2, rect.left - pad);
+        const spotWidth = Math.min(window.innerWidth - (spotLeft + 2), rect.width + (pad * 2));
+        const spotHeight = rect.height + (pad * 2);
+
+        tourSpotlightBox.style.top = `${spotTop}px`;
+        tourSpotlightBox.style.left = `${spotLeft}px`;
+        tourSpotlightBox.style.width = `${spotWidth}px`;
+        tourSpotlightBox.style.height = `${spotHeight}px`;
+
+        const tooltipWidth = Math.min(window.innerWidth - 28, 340);
+        tourTooltipCard.style.width = `${tooltipWidth}px`;
+        const tooltipHeight = tourTooltipCard.offsetHeight || 140;
+
+        const spaceBelow = window.innerHeight - (spotTop + spotHeight);
+        const spaceAbove = spotTop;
+        const isFixedTarget = (target === mobileStickyBar);
+
+        let tooltipTop = 0;
+        let arrowClass = 'arrow-up';
+
+        if (isFixedTarget || (spaceBelow < (tooltipHeight + 16) && spaceAbove > tooltipHeight)) {
+            // Position above target
+            tooltipTop = Math.max(8, spotTop - tooltipHeight - 12);
+            arrowClass = 'arrow-down';
+        } else {
+            // Position below target
+            tooltipTop = Math.min(window.innerHeight - tooltipHeight - 8, spotTop + spotHeight + 12);
+            arrowClass = 'arrow-up';
+        }
+
+        let tooltipLeft = spotLeft + (spotWidth / 2) - (tooltipWidth / 2);
+        tooltipLeft = Math.max(14, Math.min(tooltipLeft, window.innerWidth - tooltipWidth - 14));
+
+        tourTooltipCard.style.top = `${tooltipTop}px`;
+        tourTooltipCard.style.left = `${tooltipLeft}px`;
+
+        tourArrow.className = `tour-arrow ${arrowClass}`;
+
+        let arrowTargetX = spotLeft + (spotWidth / 2);
+        if (isFixedTarget) {
+            const proceedBtn = document.getElementById('stickyProceedBtn');
+            if (proceedBtn) {
+                const btnRect = proceedBtn.getBoundingClientRect();
+                arrowTargetX = btnRect.left + (btnRect.width / 2);
+            }
+        }
+        const arrowLeft = Math.min(Math.max(20, arrowTargetX - tooltipLeft - 8), tooltipWidth - 36);
+        tourArrow.style.left = `${arrowLeft}px`;
+    }
+
+    function goToTourStep(index) {
+        if (index < 0 || index >= tourSteps.length) {
+            endTour(true);
+            return;
+        }
+        currentTourIndex = index;
+        const stepObj = tourSteps[currentTourIndex];
+
+        if (stepObj.beforeShow) {
+            stepObj.beforeShow();
+        }
+
+        tourStepBadge.textContent = `Step ${stepObj.step} of ${tourSteps.length}`;
+        tourTitle.textContent = stepObj.title;
+        tourDesc.textContent = stepObj.desc;
+
+        if (currentTourIndex > 0) {
+            tourPrevBtn.style.display = 'inline-flex';
+        } else {
+            tourPrevBtn.style.display = 'none';
+        }
+
+        if (currentTourIndex === tourSteps.length - 1) {
+            tourNextBtnText.textContent = 'Got it!';
+            tourNextBtnIcon.className = 'fa-solid fa-check ms-1';
+        } else {
+            tourNextBtnText.textContent = 'Next';
+            tourNextBtnIcon.className = 'fa-solid fa-arrow-right ms-1';
+        }
+
+        if (tourDotsContainer) {
+            const dots = tourDotsContainer.querySelectorAll('.tour-dot');
+            dots.forEach((dot, idx) => {
+                if (idx === currentTourIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        tourSpotlightBox.style.display = 'block';
+        tourTooltipCard.style.display = 'block';
+
+        const target = stepObj.getTarget();
+        if (target && target !== mobileStickyBar) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        positionTourElements();
+        setTimeout(positionTourElements, 120);
+        setTimeout(positionTourElements, 350);
+    }
+
+    function startTour(force = false) {
+        if (!force && localStorage.getItem('arohan_exam_tour_seen')) {
+            return;
+        }
+        isTourActive = true;
+        goToTourStep(0);
+    }
+
+    function endTour(saveSeen = true) {
+        isTourActive = false;
+        if (tourSpotlightBox) tourSpotlightBox.style.display = 'none';
+        if (tourTooltipCard) tourTooltipCard.style.display = 'none';
+        if (saveSeen) {
+            localStorage.setItem('arohan_exam_tour_seen', 'true');
+        }
+    }
+
+    if (tourCloseBtn) tourCloseBtn.addEventListener('click', () => endTour(true));
+    if (tourSkipBtn) tourSkipBtn.addEventListener('click', () => endTour(true));
+    if (tourPrevBtn) tourPrevBtn.addEventListener('click', () => goToTourStep(currentTourIndex - 1));
+    if (tourNextBtn) tourNextBtn.addEventListener('click', () => {
+        if (currentTourIndex === tourSteps.length - 1) {
+            endTour(true);
+        } else {
+            goToTourStep(currentTourIndex + 1);
+        }
+    });
+
+    if (tourDotsContainer) {
+        tourDotsContainer.addEventListener('click', function (e) {
+            const dot = e.target.closest('.tour-dot');
+            if (dot && dot.dataset.step !== undefined) {
+                goToTourStep(parseInt(dot.dataset.step, 10));
+            }
+        });
+    }
+
+    if (btnRestartTour) {
+        btnRestartTour.addEventListener('click', function () {
+            startTour(true);
+        });
+    }
+
+    window.addEventListener('scroll', function () {
+        if (isTourActive) {
+            positionTourElements();
+        }
+    }, { passive: true });
+
+    window.addEventListener('resize', function () {
+        if (isTourActive) {
+            positionTourElements();
+        }
+    }, { passive: true });
+
+    // Main initialization: runs on DOMContentLoaded and on pageshow (e.g. mobile browser Back button)
+    function initPortal() {
+        const state = getStoredState();
+        if (state.classId) {
+            classSelect.value = state.classId;
+            loadClassDataAndRestore(state.classId, state.studentId, state.subject, state.examId, state.filterQuery);
+        }
+    }
+
+    initPortal();
+
+    // Listen for pageshow to guarantee restoration on mobile browser Back button (from bfcache)
+    window.addEventListener('pageshow', function (event) {
+        isStartingTest = false;
+        if (event.persisted) {
+            initPortal();
+        } else {
+            updateFlowState();
+        }
+    });
+
+    // Auto-launch tour on first visit
+    if (!localStorage.getItem('arohan_exam_tour_seen')) {
+        setTimeout(function () {
+            startTour(false);
+        }, 750);
+    }
+});
+</script>
+{% endblock %}

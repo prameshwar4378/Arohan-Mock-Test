@@ -1,0 +1,690 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Executive Dashboard | Supervisor Control Center{% endblock %}
+{% block page_title %}Supervisor Executive Dashboard{% endblock %}
+{% block page_subtitle %}Live examination monitoring, batch statistics, and student performance analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==========================================================================
+       SUPERVISOR EXECUTIVE DASHBOARD STYLES
+       ========================================================================== */
+
+    /* Executive Hero Banner */
+    .dashboard-hero-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+        border-radius: 18px;
+        padding: 1.5rem 1.75rem;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.16);
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-hero-banner::after {
+        content: '';
+        position: absolute;
+        top: -60%;
+        right: -10%;
+        width: 380px;
+        height: 380px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero-status-pill {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pulse-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulseLive 2s infinite;
+    }
+
+    @keyframes pulseLive {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    /* Executive KPI Stat Cards */
+    .kpi-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.25rem 1.15rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .kpi-icon-bubble {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .kpi-metric-number {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+    }
+
+    .kpi-category-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: #64748b;
+    }
+
+    /* Quick Action Toolbar */
+    .quick-tools-container {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn-hover {
+        transition: all 0.2s ease;
+        border-radius: 10px;
+    }
+
+    .action-btn-hover:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Section Header Decor */
+    .section-title-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Table Enhancements */
+    .dashboard-table-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+    }
+
+    .dashboard-table th {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 700;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.85rem 1rem;
+        white-space: nowrap;
+    }
+
+    .dashboard-table td {
+        padding: 0.9rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.88rem;
+    }
+
+    .dashboard-table tbody tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    .student-avatar-initial {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #e0e7ff;
+        color: #3730a3;
+        font-weight: 700;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block supervisor_content %}
+
+<!-- 1. Executive Welcome & System Status Banner -->
+<div class="dashboard-hero-banner">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 position-relative" style="z-index: 1;">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="hero-status-pill">
+                    <span class="pulse-indicator"></span>
+                    Live Examination System Operational
+                </span>
+                <span class="badge bg-white bg-opacity-20 text-white px-2.5 py-1 rounded-pill small">
+                    <i class="fa-solid fa-graduation-cap me-1 text-warning"></i> Arohan Academy
+                </span>
+            </div>
+            <h3 class="fw-bold mb-1 text-white">Supervisor Executive Dashboard</h3>
+            <p class="text-white-50 mb-0 small" style="max-width: 650px;">
+                Central command center for mock tests administration, automated score compilation, batch roster tracking, and PDF/Excel performance reports generation.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'portal:supervisor_bulk_questions' %}" class="btn btn-warning fw-bold shadow-sm action-btn-hover d-inline-flex align-items-center gap-1.5 px-3 py-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-dark"></i>
+                <span class="text-dark">Bulk Question Importer</span>
+            </a>
+            <a href="{% url 'portal:supervisor_exam_create' %}" class="btn btn-light fw-bold shadow-sm action-btn-hover d-inline-flex align-items-center gap-1.5 px-3 py-2 text-primary">
+                <i class="fa-solid fa-plus text-primary"></i>
+                <span>New Mock Test</span>
+            </a>
+            <a href="{% url 'portal:index' %}" target="_blank" class="btn btn-outline-light action-btn-hover d-inline-flex align-items-center gap-1.5 px-3 py-2">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Student View</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 2. KPI Summary Cards Grid -->
+<div class="row g-3 mb-4">
+    <!-- Active Classes / Batches -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-category-title">Batches</span>
+                <div class="kpi-icon-bubble bg-primary bg-opacity-10 text-primary">
+                    <i class="fa-solid fa-chalkboard"></i>
+                </div>
+            </div>
+            <div>
+                <div class="kpi-metric-number">{{ total_classes }}</div>
+                <div class="small text-muted mt-1 d-flex align-items-center justify-content-between">
+                    <span>Active classes</span>
+                    <a href="{% url 'portal:supervisor_classes' %}" class="text-primary text-decoration-none fw-semibold small">View &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrolled Students -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-category-title">Students</span>
+                <div class="kpi-icon-bubble bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+            </div>
+            <div>
+                <div class="kpi-metric-number">{{ total_students }}</div>
+                <div class="small text-muted mt-1 d-flex align-items-center justify-content-between">
+                    <span>Active roster</span>
+                    <a href="{% url 'portal:supervisor_students' %}" class="text-success text-decoration-none fw-semibold small">Audit &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mock Tests Catalog -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-category-title">Mock Tests</span>
+                <div class="kpi-icon-bubble bg-info bg-opacity-10 text-info">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+            </div>
+            <div>
+                <div class="kpi-metric-number">{{ total_exams }}</div>
+                <div class="small text-muted mt-1 d-flex align-items-center justify-content-between">
+                    <span>Exam papers</span>
+                    <a href="{% url 'portal:supervisor_exams' %}" class="text-info text-decoration-none fw-semibold small">Manage &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Bank -->
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-category-title">Questions Bank</span>
+                <div class="kpi-icon-bubble bg-warning bg-opacity-10 text-warning">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+            <div>
+                <div class="kpi-metric-number">{{ total_questions }}</div>
+                <div class="small text-muted mt-1 d-flex align-items-center justify-content-between">
+                    <span>Total MCQs active</span>
+                    <a href="{% url 'portal:supervisor_bulk_questions' %}" class="text-warning text-decoration-none fw-semibold small">+ Bulk Import &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Attempts Logged -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-category-title">Total Submissions</span>
+                <div class="kpi-icon-bubble" style="background:#f3e8ff; color:#9333ea;">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+            </div>
+            <div>
+                <div class="kpi-metric-number">{{ total_attempts }}</div>
+                <div class="small text-muted mt-1 d-flex align-items-center justify-content-between">
+                    <span>Student exam attempts</span>
+                    <a href="{% url 'portal:supervisor_students' %}" class="text-purple text-decoration-none fw-semibold small" style="color: #9333ea;">Students &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Quick Action Shortcuts Toolbar -->
+<div class="quick-tools-container">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-dark text-white px-2.5 py-1.5 rounded-3">
+                <i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Actions
+            </span>
+            <span class="small text-muted">Frequently used academy management shortcuts:</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'portal:supervisor_reports_hub' %}" class="btn btn-outline-danger btn-sm fw-bold action-btn-hover d-inline-flex align-items-center gap-1.5">
+                <i class="fa-solid fa-file-invoice"></i> Performance Reports (PDF/Excel)
+            </a>
+            <a href="{% url 'portal:supervisor_bulk_questions' %}" class="btn btn-warning btn-sm fw-bold text-dark shadow-sm action-btn-hover d-inline-flex align-items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Bulk Question Importer
+            </a>
+            <a href="{% url 'portal:supervisor_exam_create' %}" class="btn btn-primary btn-sm fw-bold shadow-sm action-btn-hover d-inline-flex align-items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i> Create Mock Test
+            </a>
+            <a href="{% url 'portal:supervisor_classes' %}" class="btn btn-outline-secondary btn-sm action-btn-hover d-inline-flex align-items-center gap-1.5">
+                <i class="fa-solid fa-chalkboard"></i> Add / View Batches
+            </a>
+            <a href="{% url 'portal:supervisor_students' %}" class="btn btn-outline-secondary btn-sm action-btn-hover d-inline-flex align-items-center gap-1.5">
+                <i class="fa-solid fa-users"></i> Students Directory & Audits
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Interactive Analytical Visualizations -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: 7-Day Activity Trend -->
+    <div class="col-lg-8">
+        <div class="card-custom p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-chart-area text-primary"></i>Weekly Exam Attempts Trend
+                    </h6>
+                    <small class="text-muted">Daily submissions volume over the past week</small>
+                </div>
+                <span class="badge badge-soft-primary px-2.5 py-1 rounded-pill fw-semibold">Last 7 Days</span>
+            </div>
+            <div style="height: 250px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Pass vs Fail Distribution -->
+    <div class="col-lg-4">
+        <div class="card-custom p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-success"></i>Pass / Fail Ratio
+                    </h6>
+                    <small class="text-muted">Cumulative qualification outcome</small>
+                </div>
+                <span class="badge badge-soft-success px-2.5 py-1 rounded-pill fw-semibold">{{ total_attempts }} Total</span>
+            </div>
+            <div style="height: 250px;" class="d-flex align-items-center justify-content-center">
+                {% if total_attempts > 0 %}
+                    <canvas id="passFailChart"></canvas>
+                {% else %}
+                    <div class="text-center text-muted p-4">
+                        <div class="mb-2 text-secondary opacity-50">
+                            <i class="fa-solid fa-chart-pie fa-3x"></i>
+                        </div>
+                        <div class="small fw-semibold">No exam attempts logged yet</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Chart will populate upon student submissions</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Live Exam Submissions Feed Table -->
+<div class="dashboard-table-card mb-4 p-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <span class="pulse-indicator"></span>
+                <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+                Live Exam Submissions Feed
+            </h5>
+            <p class="text-muted small mb-0 mt-1">Real-time student attempt logs across all academy classes</p>
+        </div>
+        <a href="{% url 'portal:supervisor_students' %}" class="btn btn-sm btn-outline-primary fw-semibold action-btn-hover d-inline-flex align-items-center gap-1.5 px-3">
+            <span>View Students & Audits</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    {% if recent_attempts %}
+        <div class="table-responsive">
+            <table class="table dashboard-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Class / Batch</th>
+                        <th>Mock Test</th>
+                        <th>Attempt #</th>
+                        <th>Score / Max</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                        <th class="text-end">Verification Report</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in recent_attempts %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="student-avatar-initial">
+                                        {{ att.student.name|make_list|first|upper }}
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'portal:supervisor_student_detail' att.student.id %}" class="fw-bold text-decoration-none text-dark d-block">
+                                            {{ att.student.name }}
+                                        </a>
+                                        <span class="text-muted" style="font-size:0.75rem;">Roll: {{ att.student.roll_number }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-soft-primary px-2 py-1 rounded-pill fw-semibold">{{ att.student.student_class.name }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'portal:supervisor_exam_detail' att.exam.id %}" class="text-decoration-none text-primary fw-semibold">
+                                    {{ att.exam.title }}
+                                </a>
+                            </td>
+                            <td><span class="badge bg-dark px-2 py-1">#{{ att.attempt_number }}</span></td>
+                            <td><strong class="text-dark">{{ att.score_obtained }}</strong> / {{ att.max_score }}</td>
+                            <td><strong>{{ att.percentage }}%</strong></td>
+                            <td>
+                                {% if att.is_passed %}
+                                    <span class="badge badge-soft-success fw-bold px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
+                                        <i class="fa-solid fa-check"></i> Passed
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-soft-danger fw-bold px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
+                                        <i class="fa-solid fa-xmark"></i> Failed
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                <i class="fa-regular fa-clock me-1 text-secondary"></i>{{ att.started_at|date:"d M, h:i A" }}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2.5 fw-semibold action-btn-hover">
+                                    <span>View Report</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <div class="mb-2 text-secondary opacity-50">
+                <i class="fa-solid fa-clipboard-question fa-3x"></i>
+            </div>
+            <div class="fw-semibold">No mock test attempts recorded yet.</div>
+            <p class="small text-muted mb-3">Student submissions will appear here in real time once tests are taken.</p>
+            <a href="{% url 'portal:index' %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-eye me-1"></i> Open Student Portal
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- 6. Active Classes and Active Mock Tests Dual Grid -->
+<div class="row g-4 mb-4">
+    <!-- Active Classes & Enrolled Students -->
+    <div class="col-lg-6">
+        <div class="card-custom p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-chalkboard text-primary"></i>Classes & Enrolled Students
+                    </h6>
+                    <small class="text-muted">Batch capacity & active student strength</small>
+                </div>
+                <a href="{% url 'portal:supervisor_classes' %}" class="btn btn-sm btn-outline-secondary action-btn-hover">Manage Batches</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table dashboard-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>Code</th>
+                            <th>Students</th>
+                            <th>Exams</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in classes %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ c.name }}</td>
+                                <td><span class="badge bg-secondary px-2 py-1">{{ c.code|default:"-" }}</span></td>
+                                <td><strong class="text-primary">{{ c.student_count }}</strong></td>
+                                <td>{{ c.exam_count }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:supervisor_class_detail' c.id %}" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold action-btn-hover">
+                                        Roster &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No academic classes created yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Mock Tests -->
+    <div class="col-lg-6">
+        <div class="card-custom p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-signature text-primary"></i>Active Mock Tests
+                    </h6>
+                    <small class="text-muted">Test papers with submission statistics</small>
+                </div>
+                <a href="{% url 'portal:supervisor_exams' %}" class="btn btn-sm btn-outline-secondary action-btn-hover">All Tests</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table dashboard-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Exam Title</th>
+                            <th>Attempts</th>
+                            <th>Avg Score</th>
+                            <th>Top Score</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in exams %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ e.title }}</div>
+                                    <span class="text-muted" style="font-size:0.75rem;">{{ e.subject|default:"General" }}</span>
+                                </td>
+                                <td><span class="badge bg-dark px-2 py-1">{{ e.attempt_count }}</span></td>
+                                <td>{{ e.avg_score|floatformat:1|default:"-" }}</td>
+                                <td><strong class="text-success">{{ e.highest_score|default:"-" }}</strong></td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:supervisor_exam_detail' e.id %}" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold action-btn-hover">
+                                        Details &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No mock tests created yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Weekly Trend Chart
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx) {
+        const dateLabels = {{ chart_dates_json|safe }};
+        const attemptData = {{ chart_attempts_7d_json|safe }};
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: dateLabels,
+                datasets: [{
+                    label: 'Submissions',
+                    data: attemptData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Pass vs Fail Donut Chart
+    const pfCtx = document.getElementById('passFailChart');
+    if (pfCtx) {
+        const passed = {{ passed_attempts }};
+        const failed = {{ failed_attempts }};
+        new Chart(pfCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Passed', 'Failed'],
+                datasets: [{
+                    data: [passed, failed],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { weight: 600 } }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "portal/supervisor/base_supervisor.html" %}
+{% load static %}
+
+{% block title %}Performance Reports & Exports | Arohan Academy{% endblock %}
+
+{% block supervisor_content %}
+<div class="container-fluid px-3 px-lg-4 py-4">
+
+    <!-- Header Banner -->
+    <div class="card-custom p-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-warning text-dark fw-bold px-3 py-1 text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-chart-pie me-1"></i>Analytics & Audit Reports
+                    </span>
+                    <span class="badge bg-light text-primary fw-bold px-2 py-1">PDF & Excel Engine</span>
+                </div>
+                <h2 class="h3 fw-bold text-white mb-1">Academy Performance Reports</h2>
+                <p class="text-white-50 mb-0 small">
+                    Class-wise and Student-wise audit reports. Track scheduled mock tests, student attempt coverage, average scores, and download official PDF / Excel reports.
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'portal:supervisor_students' %}" class="btn btn-light btn-sm fw-semibold shadow-sm">
+                    <i class="fa-solid fa-user-graduate me-1"></i>Students Roster & Audits
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 text-center border-0 shadow-sm">
+                <div class="text-primary fs-3 mb-1"><i class="fa-solid fa-chalkboard"></i></div>
+                <div class="fs-4 fw-bold text-dark">{{ total_classes }}</div>
+                <div class="text-muted small fw-medium">Active Classes</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 text-center border-0 shadow-sm">
+                <div class="text-success fs-3 mb-1"><i class="fa-solid fa-user-graduate"></i></div>
+                <div class="fs-4 fw-bold text-dark">{{ total_students }}</div>
+                <div class="text-muted small fw-medium">Enrolled Students</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 text-center border-0 shadow-sm">
+                <div class="text-warning fs-3 mb-1"><i class="fa-solid fa-file-signature"></i></div>
+                <div class="fs-4 fw-bold text-dark">{{ total_exams }}</div>
+                <div class="text-muted small fw-medium">Mock Tests Scheduled</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-custom p-3 text-center border-0 shadow-sm">
+                <div class="text-info fs-3 mb-1"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                <div class="fs-4 fw-bold text-dark">{{ total_attempts }}</div>
+                <div class="text-muted small fw-medium">Test Submissions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Class-Wise Reports -->
+    <div class="card-custom border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="fa-solid fa-chalkboard-user text-primary me-2"></i>Class-Wise Reports
+                </h5>
+                <small class="text-muted">Includes scheduled vs attempted tests, participation rate, and student scores</small>
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-bold">{{ classes|length }} Classes</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Class / Batch</th>
+                        <th>Class Code</th>
+                        <th class="text-center">Enrolled Students</th>
+                        <th class="text-center">Exams Scheduled</th>
+                        <th class="text-end pe-4">Export & Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in classes %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ c.name }}</div>
+                            <small class="text-muted">{{ c.description|default:"Standard Batch" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-dark font-monospace">{{ c.code|default:"-" }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border fw-bold px-2 py-1">
+                                <i class="fa-solid fa-users me-1 text-primary"></i>{{ c.students_count }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border fw-bold px-2 py-1">
+                                <i class="fa-solid fa-file-pen me-1 text-warning"></i>{{ c.exams_count }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'portal:supervisor_class_report' c.id %}" class="btn btn-outline-primary" title="View interactive responsive web report">
+                                    <i class="fa-solid fa-eye me-1"></i>View Web
+                                </a>
+                                <a href="{% url 'portal:supervisor_class_report_pdf' c.id %}" class="btn btn-outline-danger" title="Download official PDF report">
+                                    <i class="fa-solid fa-file-pdf me-1"></i>PDF
+                                </a>
+                                <a href="{% url 'portal:supervisor_class_report_excel' c.id %}" class="btn btn-outline-success" title="Download Excel (.xlsx) sheet">
+                                    <i class="fa-solid fa-file-excel me-1"></i>Excel
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-folder-open fs-3 mb-2 d-block"></i>No classes found in the system.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Student-Wise Reports -->
+    <div class="card-custom border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-user-graduate text-success me-2"></i>Student-Wise Reports & Scorecards
+                    </h5>
+                    <small class="text-muted">Individual chronological attempt ledgers, scorecards, and pending tests</small>
+                </div>
+            </div>
+
+            <!-- Filter and Search -->
+            <form method="GET" class="row g-2 mt-2">
+                <div class="col-md-4">
+                    <select name="class_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- All Classes & Batches --</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}" {% if selected_class_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                            {{ c.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search student by name, roll number, or phone..." value="{{ search_query }}">
+                        {% if search_query or selected_class_id %}
+                        <a href="{% url 'portal:supervisor_reports_hub' %}" class="btn btn-outline-secondary">Clear</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <small class="text-muted d-block mt-1">Showing {{ students|length }} students</small>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Roll No</th>
+                        <th>Student Name</th>
+                        <th>Class</th>
+                        <th>Contact</th>
+                        <th class="text-center">Tests Attempted</th>
+                        <th class="text-end pe-4">Export & Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="badge bg-light text-dark border font-monospace fw-bold">{{ s.roll_number }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ s.name }}</div>
+                            {% if s.email %}<small class="text-muted">{{ s.email }}</small>{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary">{{ s.student_class.name }}</span>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ s.phone|default:"-" }}</small>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border fw-bold px-2 py-1">
+                                <i class="fa-solid fa-clock-rotate-left me-1 text-info"></i>{{ s.attempts_count }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'portal:supervisor_student_report' s.id %}" class="btn btn-outline-primary" title="View interactive web scorecard">
+                                    <i class="fa-solid fa-eye me-1"></i>Web Scorecard
+                                </a>
+                                <a href="{% url 'portal:supervisor_student_report_pdf' s.id %}" class="btn btn-outline-danger" title="Download official PDF scorecard">
+                                    <i class="fa-solid fa-file-pdf me-1"></i>PDF
+                                </a>
+                                <a href="{% url 'portal:supervisor_student_report_excel' s.id %}" class="btn btn-outline-success" title="Download Excel (.xlsx) sheet">
+                                    <i class="fa-solid fa-file-excel me-1"></i>Excel
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-user-xmark fs-3 mb-2 d-block"></i>No students found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

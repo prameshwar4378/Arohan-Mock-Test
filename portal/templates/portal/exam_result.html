@@ -1,0 +1,1352 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Result & Verification: {{ exam.title }} | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-banner-mobile {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .result-score-circle {
+        width: 125px;
+        height: 125px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        border: 7px solid;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .score-circle-eyebrow {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1.1;
+        margin-bottom: 2px;
+    }
+
+    .score-circle-number {
+        font-size: 2.1rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 1px 0;
+    }
+
+    .score-circle-denominator {
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.1;
+        opacity: 0.85;
+    }
+
+    .border-pass {
+        border-color: #10b981 !important;
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .border-fail {
+        border-color: #ef4444 !important;
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    /* ==========================================================================
+       DARK THEME STUDENT DOSSIER & CREATIVE GRADE BADGE
+       ========================================================================== */
+    .student-dark-card {
+        background: linear-gradient(135deg, #090e1a 0%, #1e293b 100%) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
+        color: #ffffff !important;
+        position: relative;
+        overflow: hidden;
+        padding: 1.2rem 1.4rem;
+    }
+
+    .student-dark-card::after {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -15%;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .student-avatar-badge {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        max-width: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        flex-shrink: 0;
+        margin-right: 14px;
+    }
+
+    .student-card-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 2px;
+        line-height: 1.2;
+    }
+
+    .student-candidate-name {
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: #ffffff !important;
+        letter-spacing: -0.2px;
+        line-height: 1.25;
+        margin: 0;
+    }
+
+    /* Creative Grade Badges */
+    .grade-pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-weight: 700;
+        backdrop-filter: blur(8px);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .grade-gold {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(217, 119, 6, 0.4)) !important;
+        border: 1.5px solid #f59e0b !important;
+        color: #fbbf24 !important;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .grade-silver {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(37, 99, 235, 0.4)) !important;
+        border: 1.5px solid #60a5fa !important;
+        color: #93c5fd !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
+    }
+
+    .grade-bronze {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(5, 150, 105, 0.4)) !important;
+        border: 1.5px solid #34d399 !important;
+        color: #6ee7b7 !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+
+    .grade-practice {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(185, 28, 28, 0.35)) !important;
+        border: 1.5px solid #f87171 !important;
+        color: #fca5a5 !important;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+    }
+
+    .grade-pill-icon {
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .grade-pill-letter {
+        font-size: 0.95rem;
+        line-height: 1.1;
+        font-weight: 800;
+    }
+
+    .grade-pill-title {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+    }
+
+    .student-detail-chip {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 11px;
+        padding: 0.65rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .detail-chip-label {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .detail-chip-value {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #ffffff !important;
+        line-height: 1.25;
+    }
+
+    /* ==========================================================================
+       QUESTION OPTIONS REVIEW - CRISP & HIGH CONTRAST
+       ========================================================================== */
+    .option-review-card {
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 0.65rem;
+        background: #ffffff;
+        font-size: 0.95rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: all 0.15s ease;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .option-letter-badge {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.86rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        margin-right: 12px;
+    }
+
+    .option-letter-neutral {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+        border: 1.5px solid #94a3b8 !important;
+        font-weight: 800 !important;
+    }
+
+    .option-text-body {
+        line-height: 1.5;
+        color: #1e293b;
+        word-break: break-word;
+        font-size: 0.93rem;
+    }
+
+    .option-status-wrapper {
+        margin-left: 38px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .option-status-pill {
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.2px;
+    }
+
+    .status-pill-correct {
+        background: #d1fae5 !important;
+        color: #065f46 !important;
+        border: 1.5px solid #059669 !important;
+        font-weight: 700 !important;
+    }
+
+    .status-pill-wrong {
+        background: #fee2e2 !important;
+        color: #991b1b !important;
+        border: 1.5px solid #dc2626 !important;
+        font-weight: 700 !important;
+    }
+
+    .option-review-correct {
+        border-color: #059669 !important;
+        border-width: 2px !important;
+        background-color: #ecfdf5 !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+    }
+
+    .option-review-correct .option-text-body {
+        color: #065f46 !important;
+        font-weight: 700 !important;
+    }
+
+    .option-review-wrong {
+        border-color: #dc2626 !important;
+        border-width: 2px !important;
+        background-color: #fef2f2 !important;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
+    }
+
+    .option-review-wrong .option-text-body {
+        color: #991b1b !important;
+        font-weight: 700 !important;
+    }
+
+    @media (min-width: 768px) {
+        .option-review-card {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .option-status-wrapper {
+            margin-left: 0;
+            text-align: right;
+        }
+    }
+
+    .explanation-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-left: 4px solid #0284c7;
+        border-radius: 0 10px 10px 0;
+        padding: 0.85rem 1rem;
+    }
+
+    .btn-touch-lg {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        border-radius: 12px;
+        touch-action: manipulation;
+    }
+
+    /* ==========================================================================
+       COMPACT REPORT MODE (High Density - Eliminates Unnecessary Space)
+       ========================================================================== */
+    .report-compact-mode {
+        max-width: 680px !important;
+        margin: 0 auto !important;
+        padding: 6px !important;
+    }
+
+    .report-compact-mode .score-banner-mobile {
+        padding: 0.85rem 1rem !important;
+        margin-bottom: 0.65rem !important;
+        border-radius: 14px !important;
+    }
+
+    .report-compact-mode .score-banner-mobile h3 {
+        font-size: 1.15rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    .report-compact-mode .result-score-circle {
+        width: 100px !important;
+        height: 100px !important;
+        border-width: 5px !important;
+        padding: 5px !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    .report-compact-mode .score-circle-eyebrow {
+        font-size: 0.54rem !important;
+        letter-spacing: 0.3px !important;
+        line-height: 1 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .report-compact-mode .score-circle-number {
+        font-size: 1.6rem !important;
+        line-height: 1 !important;
+        margin: 1px 0 !important;
+    }
+
+    .report-compact-mode .score-circle-denominator {
+        font-size: 0.58rem !important;
+        line-height: 1 !important;
+    }
+
+    .report-compact-mode .student-dark-card {
+        padding: 0.85rem 1.05rem !important;
+        margin-bottom: 0.55rem !important;
+        border-radius: 14px !important;
+    }
+
+    .report-compact-mode .student-avatar-badge {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        font-size: 0.95rem !important;
+        border-radius: 10px !important;
+        margin-right: 12px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .report-compact-mode .student-candidate-name {
+        font-size: 1.1rem !important;
+    }
+
+    .report-compact-mode .grade-pill-badge {
+        padding: 4px 10px !important;
+        gap: 6px !important;
+    }
+
+    .report-compact-mode .grade-pill-icon {
+        font-size: 0.95rem !important;
+    }
+
+    .report-compact-mode .grade-pill-letter {
+        font-size: 0.82rem !important;
+    }
+
+    .report-compact-mode .grade-pill-title {
+        font-size: 0.58rem !important;
+    }
+
+    .report-compact-mode .student-detail-chip {
+        padding: 0.35rem 0.55rem !important;
+        border-radius: 8px !important;
+    }
+
+    .report-compact-mode .detail-chip-label {
+        font-size: 0.65rem !important;
+    }
+
+    .report-compact-mode .detail-chip-value {
+        font-size: 0.82rem !important;
+    }
+
+    .report-compact-mode .stat-counters-row {
+        margin-top: 0.45rem !important;
+        padding-top: 0.45rem !important;
+    }
+
+    .report-compact-mode .stat-box {
+        padding: 0.35rem 0.5rem !important;
+        border-radius: 8px !important;
+    }
+
+    .report-compact-mode .stat-box h4 {
+        font-size: 1.05rem !important;
+    }
+
+    .report-compact-mode .stat-box .small {
+        font-size: 0.68rem !important;
+    }
+
+    .report-compact-mode .question-card-item {
+        padding: 0.7rem 0.9rem !important;
+        margin-bottom: 0.55rem !important;
+        border-radius: 12px !important;
+    }
+
+    .report-compact-mode .question-card-item h6 {
+        font-size: 0.88rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.45rem !important;
+    }
+
+    .report-compact-mode .option-review-card {
+        padding: 0.45rem 0.75rem 0.45rem 0.5rem !important;
+        margin-bottom: 4px !important;
+        border-radius: 8px !important;
+        font-size: 0.85rem !important;
+        gap: 6px !important;
+    }
+
+    .report-compact-mode .option-letter-badge {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        font-size: 0.78rem !important;
+        border-radius: 6px !important;
+        margin-right: 10px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .report-compact-mode .option-text-body {
+        font-size: 0.85rem !important;
+        line-height: 1.35 !important;
+    }
+
+    .report-compact-mode .option-status-pill {
+        font-size: 0.7rem !important;
+        padding: 3px 8px !important;
+    }
+
+    .report-compact-mode .explanation-box {
+        padding: 0.45rem 0.75rem !important;
+        margin-top: 0.45rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* ==========================================================================
+       DEDICATED COMPACT PRINT ENGINE STYLES (A5 Size, Zero Wasted Space)
+       ========================================================================== */
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        @page {
+            size: A5 portrait;
+            margin: 5mm 6mm;
+        }
+
+        body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-size: 11px !important;
+            padding: 0 !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .container-fluid, .container-lg {
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .score-banner-mobile {
+            padding: 0.65rem 0.85rem !important;
+            border-radius: 10px !important;
+            margin-bottom: 0.45rem !important;
+            box-shadow: none !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        .score-banner-mobile h3 {
+            font-size: 1.05rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .result-score-circle {
+            width: 92px !important;
+            height: 92px !important;
+            border-width: 4px !important;
+            padding: 4px !important;
+            margin: 0 auto 0.35rem auto !important;
+        }
+
+        .score-circle-eyebrow {
+            font-size: 0.52rem !important;
+            letter-spacing: 0.3px !important;
+            line-height: 1 !important;
+            margin-bottom: 2px !important;
+        }
+
+        .score-circle-number {
+            font-size: 1.5rem !important;
+            line-height: 1 !important;
+            margin: 1px 0 !important;
+        }
+
+        .score-circle-denominator {
+            font-size: 0.55rem !important;
+            line-height: 1 !important;
+        }
+
+        .student-dark-card {
+            background: linear-gradient(135deg, #090e1a 0%, #1e293b 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #334155 !important;
+            padding: 0.5rem 0.7rem !important;
+            border-radius: 10px !important;
+            margin-bottom: 0.4rem !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .student-candidate-name {
+            color: #ffffff !important;
+            font-size: 0.95rem !important;
+        }
+
+        .student-avatar-badge {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+            font-size: 0.95rem !important;
+            margin-right: 12px !important;
+            flex-shrink: 0 !important;
+            border-radius: 10px !important;
+        }
+
+        .student-detail-chip {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.25rem 0.45rem !important;
+        }
+
+        .detail-chip-label {
+            font-size: 0.6rem !important;
+        }
+
+        .detail-chip-value {
+            color: #ffffff !important;
+            font-size: 0.78rem !important;
+        }
+
+        .grade-pill-badge {
+            padding: 3px 8px !important;
+            gap: 5px !important;
+            page-break-inside: avoid !important;
+        }
+
+        .grade-pill-letter {
+            font-size: 0.76rem !important;
+        }
+
+        .grade-pill-title {
+            font-size: 0.55rem !important;
+        }
+
+        .stat-counters-row {
+            margin-top: 0.35rem !important;
+            padding-top: 0.35rem !important;
+        }
+
+        .stat-box {
+            padding: 0.3rem 0.45rem !important;
+        }
+
+        .stat-box h4 {
+            font-size: 0.95rem !important;
+        }
+
+        .verification-section-header h5 {
+            font-size: 0.92rem !important;
+            margin-bottom: 2px !important;
+        }
+
+        .verification-section-header p {
+            font-size: 0.7rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+
+        .card-custom, .question-card-item {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            padding: 0.55rem 0.75rem !important;
+            margin-bottom: 0.45rem !important;
+            box-shadow: none !important;
+        }
+
+        .question-card-item h6 {
+            font-size: 0.85rem !important;
+            line-height: 1.35 !important;
+            margin-bottom: 0.35rem !important;
+        }
+
+        .option-review-card {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 0.35rem 0.55rem 0.35rem 0.45rem !important;
+            margin-bottom: 3px !important;
+            font-size: 0.8rem !important;
+            gap: 4px !important;
+        }
+
+        .option-letter-badge {
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px !important;
+            font-size: 0.74rem !important;
+            border-radius: 6px !important;
+            margin-right: 8px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .option-text-body {
+            font-size: 0.8rem !important;
+            line-height: 1.3 !important;
+        }
+
+        .option-status-pill {
+            font-size: 0.65rem !important;
+            padding: 2px 7px !important;
+        }
+
+        .option-review-correct {
+            background-color: #ecfdf5 !important;
+            border: 1.5px solid #059669 !important;
+        }
+
+        .option-review-correct .option-text-body {
+            color: #065f46 !important;
+            font-weight: 700 !important;
+        }
+
+        .option-review-wrong {
+            background-color: #fef2f2 !important;
+            border: 1.5px solid #dc2626 !important;
+        }
+
+        .option-review-wrong .option-text-body {
+            color: #991b1b !important;
+            font-weight: 700 !important;
+        }
+
+        .status-pill-correct {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            border: 1px solid #059669 !important;
+        }
+
+        .status-pill-wrong {
+            background-color: #fee2e2 !important;
+            color: #991b1b !important;
+            border: 1px solid #dc2626 !important;
+        }
+
+        .explanation-box {
+            background-color: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            border-left: 3px solid #0284c7 !important;
+            padding: 0.35rem 0.55rem !important;
+            font-size: 0.75rem !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-lg py-3 py-md-4" id="reportPrintArea">
+
+    <!-- Top Navigation Actions (Hidden in Print) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+        <a href="{% url 'portal:index' %}?class_id={{ student.student_class.id }}&student_id={{ student.id }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-house me-1"></i> Home
+        </a>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- Smart Print / PDF Action Group -->
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-dark fw-bold d-flex align-items-center gap-1.5 shadow-sm" id="btnMainPrintPdf">
+                    <i class="fa-solid fa-file-pdf text-danger" id="mainPrintPdfIcon"></i>
+                    <span id="mainPrintPdfLabel">Print / PDF Report</span>
+                </button>
+                <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownPrintPdfSplit">
+                    <span class="visually-hidden">Toggle PDF Options</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="border-radius: 12px; font-size: 0.85rem;">
+                    <li>
+                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionDownloadPdfA5">
+                            <i class="fa-solid fa-file-arrow-down text-danger"></i>
+                            <div>
+                                <div class="fw-bold text-dark">Download Continuous PDF Report</div>
+                                <small class="text-muted" style="font-size: 0.72rem;">Single continuous page, auto-sized to questions</small>
+                            </div>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionDownloadPdfA4">
+                            <i class="fa-solid fa-file-pdf text-primary"></i>
+                            <div>
+                                <div class="fw-bold text-dark">Download Standard Width PDF</div>
+                                <small class="text-muted" style="font-size: 0.72rem;">Full-width continuous scorecard</small>
+                            </div>
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionPrintDocument">
+                            <i class="fa-solid fa-print text-secondary"></i>
+                            <div>
+                                <div class="fw-bold text-dark">Print Report</div>
+                                <small class="text-muted" style="font-size: 0.72rem;">Open system print dialog</small>
+                            </div>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <a href="{% url 'portal:student_history' student.id %}" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> My Attempts
+            </a>
+            <a href="{% url 'portal:exam_instruction' exam.id %}?student_id={{ student.id }}" class="btn btn-arohan-primary btn-sm fw-bold">
+                <i class="fa-solid fa-rotate-right me-1"></i> Retake Test
+            </a>
+        </div>
+    </div>
+
+
+    <!-- Official Result Card Banner -->
+    <div class="score-banner-mobile mb-4" id="scoreBannerSection">
+        
+        <div class="row align-items-center g-4">
+            
+            <!-- Left Info -->
+            <div class="col-md-7">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary text-white text-uppercase">{{ exam.subject|default:"General" }}</span>
+                    <span class="badge bg-dark">Attempt #{{ attempt.attempt_number }}</span>
+                    <span class="badge bg-secondary">{{ attempt.completed_at|date:"d M Y, h:i A" }}</span>
+                </div>
+
+                <h3 class="fw-bold text-dark mb-2 fs-4 fs-md-3">{{ exam.title }}</h3>
+
+                <!-- Student Identification & Creative Performance Grade (Dark Theme) -->
+                <div class="student-dark-card mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-light border-opacity-10">
+                        <div class="d-flex align-items-center">
+                            <div class="student-avatar-badge me-3 flex-shrink-0">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <span class="student-card-eyebrow text-uppercase mb-1 d-block">Student Candidate</span>
+                                <h5 class="fw-bold text-white mb-0 student-candidate-name">{{ student.name }}</h5>
+                            </div>
+                        </div>
+
+                        <!-- Creative Grade Badge -->
+                        <div class="grade-pill-badge {{ attempt.grade_badge_class }}">
+                            <div class="grade-pill-icon">
+                                {% if attempt.grade == 'A+' or attempt.grade == 'A' %}
+                                    <i class="fa-solid fa-crown text-warning"></i>
+                                {% elif attempt.grade == 'B+' or attempt.grade == 'B' %}
+                                    <i class="fa-solid fa-medal text-info"></i>
+                                {% elif attempt.grade == 'C' or attempt.grade == 'D' %}
+                                    <i class="fa-solid fa-award text-success"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-rotate-right text-danger"></i>
+                                {% endif %}
+                            </div>
+                            <div class="grade-pill-content">
+                                <div class="grade-pill-letter">Grade {{ attempt.grade }}</div>
+                                <div class="grade-pill-title">{{ attempt.grade_title }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Detail Chips Grid -->
+                    <div class="row g-2">
+                        <div class="col-6 col-sm-3">
+                            <div class="student-detail-chip">
+                                <span class="detail-chip-label"><i class="fa-solid fa-id-badge text-info opacity-75"></i>Roll No</span>
+                                <span class="detail-chip-value">{{ student.roll_number }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="student-detail-chip">
+                                <span class="detail-chip-label"><i class="fa-solid fa-chalkboard-user text-warning opacity-75"></i>Class / Batch</span>
+                                <span class="detail-chip-value">{{ student.student_class.name }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="student-detail-chip">
+                                <span class="detail-chip-label"><i class="fa-solid fa-stopwatch text-success opacity-75"></i>Time Taken</span>
+                                <span class="detail-chip-value">{{ attempt.formatted_time_taken }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="student-detail-chip">
+                                <span class="detail-chip-label"><i class="fa-solid fa-bullseye text-primary opacity-75"></i>Accuracy</span>
+                                <span class="detail-chip-value">{{ attempt.accuracy_percentage }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small mb-0 no-print border-0">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    <strong>Unlimited Practice:</strong> You can retake this exam anytime to boost your score!
+                </div>
+            </div>
+
+            <!-- Right Score Circle Gauge -->
+            <div class="col-md-5 text-center">
+                <div class="result-score-circle {% if attempt.is_passed %}border-pass{% else %}border-fail{% endif %} mb-3 shadow-sm">
+                    <div class="score-circle-eyebrow fw-bold text-uppercase">Your Score</div>
+                    <div class="score-circle-number fw-bold">{{ attempt.score_obtained }}</div>
+                    <div class="score-circle-denominator fw-bold">out of {{ attempt.max_score }}</div>
+                </div>
+
+                <div class="mb-2">
+                    {% if attempt.is_passed %}
+                        <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-circle-check me-1"></i> PASSED ({{ attempt.percentage }}%)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-circle-xmark me-1"></i> NEEDS PRACTICE ({{ attempt.percentage }}%)
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="small text-muted">Passing Requirement: {{ exam.passing_percentage }}%</div>
+            </div>
+
+        </div>
+
+        <!-- 4 Stat Counters Grid (2x2 on mobile, 4 in row on tablet) -->
+        <div class="row g-2 mt-3 pt-3 border-top text-center stat-counters-row">
+            <div class="col-6 col-sm-3">
+                <div class="p-2 p-md-3 bg-light rounded-3 border stat-box">
+                    <div class="small text-muted" style="font-size:0.75rem;">Questions</div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ attempt.total_questions }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="p-2 p-md-3 bg-success-subtle rounded-3 border border-success-subtle stat-box">
+                    <div class="small text-success fw-bold" style="font-size:0.75rem;">Correct</div>
+                    <h4 class="fw-bold mb-0 text-success">{{ attempt.correct_answers }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="p-2 p-md-3 bg-danger-subtle rounded-3 border border-danger-subtle stat-box">
+                    <div class="small text-danger fw-bold" style="font-size:0.75rem;">Incorrect</div>
+                    <h4 class="fw-bold mb-0 text-danger">{{ attempt.wrong_answers }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="p-2 p-md-3 bg-light rounded-3 border stat-box">
+                    <div class="small text-muted" style="font-size:0.75rem;">Skipped</div>
+                    <h4 class="fw-bold mb-0 text-secondary">{{ attempt.unattempted_answers }}</h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Past Attempts Progression (Visible if student has attempted more than once) -->
+    {% if all_attempts_for_exam.count > 1 %}
+        <div class="card-custom p-3 p-md-4 mb-4 no-print">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-chart-line text-primary me-2"></i>Your Attempt History on This Mock Test
+            </h6>
+            
+            <div class="d-flex flex-column gap-2">
+                {% for att in all_attempts_for_exam %}
+                    <div class="p-3 border rounded-3 {% if att.id == attempt.id %}bg-primary bg-opacity-10 border-primary{% else %}bg-light{% endif %} d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold text-dark small">
+                                Attempt #{{ att.attempt_number }}
+                                {% if att.id == attempt.id %}
+                                    <span class="badge bg-primary ms-1">Current</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.72rem;">{{ att.completed_at|date:"d M Y, h:i A" }}</div>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="fw-bold text-dark">{{ att.score_obtained }}/{{ att.max_score }}</span>
+                            <span class="badge {% if att.is_passed %}bg-success{% else %}bg-danger{% endif %} ms-2">{{ att.percentage }}%</span>
+                            {% if att.id != attempt.id %}
+                                <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-sm btn-link p-0 d-block text-decoration-none" style="font-size: 0.75rem;">
+                                    View Report &rarr;
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Detailed Question Verification & Solution Breakdown -->
+    <div class="mb-4 verification-section-wrapper">
+        <div class="verification-section-header">
+            <h5 class="fw-bold text-dark mb-1">
+                <i class="fa-solid fa-clipboard-check text-primary me-2"></i>Question-by-Question Verification
+            </h5>
+            <p class="text-muted small mb-3">Green indicates correct answers, red indicates your mistakes, with step-by-step solutions.</p>
+        </div>
+
+        <div class="d-flex flex-column gap-3">
+            {% for ans in answers %}
+                <div class="card-custom question-card-item p-3 p-md-4 border {% if ans.is_correct %}border-success-subtle{% elif ans.selected_option %}border-danger-subtle{% else %}border-secondary-subtle{% endif %}">
+                    
+                    <!-- Question Header & Badges -->
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2 pb-2 border-bottom">
+                        <span class="badge bg-dark px-2 py-1">Q{{ forloop.counter }}</span>
+                        <div>
+                            {% if ans.is_correct %}
+                                <span class="badge bg-success px-2 py-1">
+                                    <i class="fa-solid fa-check me-1"></i> Correct (+{{ ans.marks_awarded }})
+                                </span>
+                            {% elif ans.selected_option %}
+                                <span class="badge bg-danger px-2 py-1">
+                                    <i class="fa-solid fa-xmark me-1"></i> Incorrect ({{ ans.marks_awarded }})
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1">
+                                    <i class="fa-solid fa-minus me-1"></i> Skipped (0.0)
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Question Prompt Text -->
+                    <div class="mb-3">
+                        <h6 class="fw-semibold text-dark lh-base fs-6">
+                            {{ ans.question.question_text|linebreaksbr }}
+                        </h6>
+                        {% if ans.question.question_image %}
+                            <div class="my-2">
+                                <img src="{{ ans.question.question_image.url }}" alt="Question Image" class="img-fluid rounded border" style="max-height: 180px;">
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 4 Options Review -->
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        
+                        <!-- Option A -->
+                        <div class="option-review-card 
+                            {% if ans.question.correct_option == 'A' %}option-review-correct{% endif %}
+                            {% if ans.selected_option == 'A' and not ans.is_correct %}option-review-wrong{% endif %}">
+                            <div class="d-flex align-items-start flex-grow-1">
+                                <strong class="badge option-letter-badge mt-0.5 {% if ans.question.correct_option == 'A' %}bg-success text-white{% elif ans.selected_option == 'A' %}bg-danger text-white{% else %}option-letter-neutral{% endif %}">A</strong>
+                                <span class="option-text-body">{{ ans.question.option_a }}</span>
+                            </div>
+                            {% if ans.question.correct_option == 'A' or ans.selected_option == 'A' %}
+                                <div class="option-status-wrapper">
+                                    {% if ans.question.correct_option == 'A' and ans.selected_option == 'A' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check-double"></i> Your Answer &bull; Correct
+                                        </span>
+                                    {% elif ans.question.correct_option == 'A' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check"></i> Correct Answer
+                                        </span>
+                                    {% elif ans.selected_option == 'A' %}
+                                        <span class="option-status-pill status-pill-wrong">
+                                            <i class="fa-solid fa-xmark"></i> Your Answer &bull; Incorrect
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Option B -->
+                        <div class="option-review-card 
+                            {% if ans.question.correct_option == 'B' %}option-review-correct{% endif %}
+                            {% if ans.selected_option == 'B' and not ans.is_correct %}option-review-wrong{% endif %}">
+                            <div class="d-flex align-items-start flex-grow-1">
+                                <strong class="badge option-letter-badge mt-0.5 {% if ans.question.correct_option == 'B' %}bg-success text-white{% elif ans.selected_option == 'B' %}bg-danger text-white{% else %}option-letter-neutral{% endif %}">B</strong>
+                                <span class="option-text-body">{{ ans.question.option_b }}</span>
+                            </div>
+                            {% if ans.question.correct_option == 'B' or ans.selected_option == 'B' %}
+                                <div class="option-status-wrapper">
+                                    {% if ans.question.correct_option == 'B' and ans.selected_option == 'B' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check-double"></i> Your Answer &bull; Correct
+                                        </span>
+                                    {% elif ans.question.correct_option == 'B' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check"></i> Correct Answer
+                                        </span>
+                                    {% elif ans.selected_option == 'B' %}
+                                        <span class="option-status-pill status-pill-wrong">
+                                            <i class="fa-solid fa-xmark"></i> Your Answer &bull; Incorrect
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Option C -->
+                        <div class="option-review-card 
+                            {% if ans.question.correct_option == 'C' %}option-review-correct{% endif %}
+                            {% if ans.selected_option == 'C' and not ans.is_correct %}option-review-wrong{% endif %}">
+                            <div class="d-flex align-items-start flex-grow-1">
+                                <strong class="badge option-letter-badge mt-0.5 {% if ans.question.correct_option == 'C' %}bg-success text-white{% elif ans.selected_option == 'C' %}bg-danger text-white{% else %}option-letter-neutral{% endif %}">C</strong>
+                                <span class="option-text-body">{{ ans.question.option_c }}</span>
+                            </div>
+                            {% if ans.question.correct_option == 'C' or ans.selected_option == 'C' %}
+                                <div class="option-status-wrapper">
+                                    {% if ans.question.correct_option == 'C' and ans.selected_option == 'C' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check-double"></i> Your Answer &bull; Correct
+                                        </span>
+                                    {% elif ans.question.correct_option == 'C' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check"></i> Correct Answer
+                                        </span>
+                                    {% elif ans.selected_option == 'C' %}
+                                        <span class="option-status-pill status-pill-wrong">
+                                            <i class="fa-solid fa-xmark"></i> Your Answer &bull; Incorrect
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Option D -->
+                        <div class="option-review-card 
+                            {% if ans.question.correct_option == 'D' %}option-review-correct{% endif %}
+                            {% if ans.selected_option == 'D' and not ans.is_correct %}option-review-wrong{% endif %}">
+                            <div class="d-flex align-items-start flex-grow-1">
+                                <strong class="badge option-letter-badge mt-0.5 {% if ans.question.correct_option == 'D' %}bg-success text-white{% elif ans.selected_option == 'D' %}bg-danger text-white{% else %}option-letter-neutral{% endif %}">D</strong>
+                                <span class="option-text-body">{{ ans.question.option_d }}</span>
+                            </div>
+                            {% if ans.question.correct_option == 'D' or ans.selected_option == 'D' %}
+                                <div class="option-status-wrapper">
+                                    {% if ans.question.correct_option == 'D' and ans.selected_option == 'D' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check-double"></i> Your Answer &bull; Correct
+                                        </span>
+                                    {% elif ans.question.correct_option == 'D' %}
+                                        <span class="option-status-pill status-pill-correct">
+                                            <i class="fa-solid fa-check"></i> Correct Answer
+                                        </span>
+                                    {% elif ans.selected_option == 'D' %}
+                                        <span class="option-status-pill status-pill-wrong">
+                                            <i class="fa-solid fa-xmark"></i> Your Answer &bull; Incorrect
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <!-- Detailed Solution Explanation -->
+                    {% if ans.question.explanation %}
+                        <div class="explanation-box">
+                            <div class="fw-bold text-primary small mb-1">
+                                <i class="fa-solid fa-lightbulb me-1"></i> Explanation & Solution:
+                            </div>
+                            <div class="small text-secondary lh-base">
+                                {{ ans.question.explanation|linebreaksbr }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Bottom Actions for Mobile -->
+    <div class="card-custom p-4 text-center no-print mb-4">
+        <h5 class="fw-bold mb-2">Practice again to master this test</h5>
+        <p class="text-muted small mb-3">You can retake this mock test as many times as you like. There are no attempt restrictions!</p>
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <a href="{% url 'portal:exam_instruction' exam.id %}?student_id={{ student.id }}" class="btn btn-arohan-primary btn-touch-lg px-4 shadow">
+                <i class="fa-solid fa-rotate-right me-2"></i> Retake This Exam Now
+            </a>
+            <a href="{% url 'portal:index' %}" class="btn btn-outline-secondary btn-touch-lg px-4">
+                <i class="fa-solid fa-house me-2"></i> Choose Another Test
+            </a>
+        </div>
+    </div>
+
+    <!-- PDF Generation Floating Feedback Toast (No-Print) -->
+    <div id="pdfProgressToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 p-3 bg-dark text-white rounded-4 shadow-lg d-none align-items-center gap-3 no-print" style="z-index: 999999; max-width: 90%; border: 1.5px solid rgba(255,255,255,0.25); backdrop-filter: blur(10px);">
+        <div class="spinner-border text-warning spinner-border-sm" role="status"></div>
+        <div class="small fw-bold" id="pdfToastText">Preparing high-quality PDF report...</div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- html2pdf bundle for high fidelity client-side PDF download -->
+<script src="{% static 'js/html2pdf.bundle.min.js' %}"></script>
+<script>
+(function () {
+    // Ensure html2pdf is available; if not, fallback to CDN
+    if (typeof html2pdf === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        document.head.appendChild(script);
+    }
+
+    // Detect whether user is on a mobile device or small touch screen
+    function isMobileDevice() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const isNarrowScreen = window.innerWidth <= 768;
+        return isMobileUa || (isTouchScreen && isNarrowScreen);
+    }
+
+    const btnMainPrintPdf = document.getElementById('btnMainPrintPdf');
+    const mainPrintPdfIcon = document.getElementById('mainPrintPdfIcon');
+    const mainPrintPdfLabel = document.getElementById('mainPrintPdfLabel');
+    const actionDownloadPdfA5 = document.getElementById('actionDownloadPdfA5');
+    const actionDownloadPdfA4 = document.getElementById('actionDownloadPdfA4');
+    const actionPrintDocument = document.getElementById('actionPrintDocument');
+    const pdfToast = document.getElementById('pdfProgressToast');
+    const pdfToastText = document.getElementById('pdfToastText');
+
+    const isMobile = isMobileDevice();
+
+    // Adjust button label & icon on mobile so it clearly states "Download PDF"
+    if (isMobile && mainPrintPdfLabel && mainPrintPdfIcon) {
+        mainPrintPdfLabel.textContent = 'Download PDF Report';
+        mainPrintPdfIcon.className = 'fa-solid fa-file-arrow-down text-danger';
+    }
+
+    function showToast(msg) {
+        if (pdfToast) {
+            if (pdfToastText) pdfToastText.textContent = msg || 'Preparing PDF report...';
+            pdfToast.classList.remove('d-none');
+            pdfToast.classList.add('d-flex');
+        }
+    }
+
+    function hideToast() {
+        if (pdfToast) {
+            pdfToast.classList.remove('d-flex');
+            pdfToast.classList.add('d-none');
+        }
+    }
+
+    // High fidelity continuous PDF generation and download
+    function executeDownloadPdf(targetFormat) {
+        showToast('Generating continuous PDF report... Please wait');
+
+        const element = document.getElementById('reportPrintArea');
+        if (!element) {
+            hideToast();
+            window.print();
+            return;
+        }
+
+        // Apply compact mode class before taking snapshot
+        element.classList.add('report-compact-mode');
+
+        // Hide interactive non-printable elements during PDF rendering
+        const noPrintElements = document.querySelectorAll('.no-print');
+        noPrintElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+        const rawExamTitle = "{{ exam.title|slugify }}";
+        const rawStudentName = "{{ student.name|slugify }}";
+        const filename = `${rawExamTitle || 'Mock_Test'}_${rawStudentName || 'Student'}_Report.pdf`;
+
+        const cleanup = () => {
+            element.classList.remove('report-compact-mode');
+            noPrintElements.forEach(el => el.style.removeProperty('display'));
+            hideToast();
+        };
+
+        const runGeneration = () => {
+            if (typeof html2pdf === 'undefined') {
+                cleanup();
+                window.print();
+                return;
+            }
+
+            // Measure the exact rendered dimensions of the report content
+            const elementWidthPx = element.offsetWidth || 680;
+            const elementHeightPx = element.scrollHeight || element.offsetHeight;
+
+            // Target page width: 148mm (compact mobile width) or 210mm (if standard A4 requested)
+            const targetWidthMm = (targetFormat && targetFormat.toLowerCase() === 'a4') ? 210 : 148;
+
+            // Calculate proportional height in millimeters based on the exact DOM height
+            // with a 10mm padding buffer so the bottom question/footer has clean breathing room
+            const targetHeightMm = Math.ceil((elementHeightPx / elementWidthPx) * targetWidthMm) + 10;
+
+            const opt = {
+                margin: [4, 5, 4, 5],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: elementWidthPx
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: [targetWidthMm, targetHeightMm],
+                    orientation: 'portrait'
+                },
+                pagebreak: {
+                    mode: [] // ZERO page breaks: entire document fits into one continuous, auto-sized page!
+                }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                cleanup();
+            }).catch(err => {
+                console.warn('html2pdf generation error, falling back to print:', err);
+                cleanup();
+                window.print();
+            });
+        };
+
+        // Allow DOM to apply compact styles before taking snapshot
+        setTimeout(runGeneration, 150);
+    }
+
+    // Main button click handler:
+    // If mobile: direct download compact A5 PDF. If desktop: open print dialog.
+    if (btnMainPrintPdf) {
+        btnMainPrintPdf.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (isMobile) {
+                executeDownloadPdf('a5');
+            } else {
+                window.print();
+            }
+        });
+    }
+
+    // Dropdown: Explicit "Download Compact PDF (A5)" action
+    if (actionDownloadPdfA5) {
+        actionDownloadPdfA5.addEventListener('click', function (e) {
+            e.preventDefault();
+            executeDownloadPdf('a5');
+        });
+    }
+
+    // Dropdown: Explicit "Download Standard PDF (A4)" action
+    if (actionDownloadPdfA4) {
+        actionDownloadPdfA4.addEventListener('click', function (e) {
+            e.preventDefault();
+            executeDownloadPdf('a4');
+        });
+    }
+
+    // Dropdown: Explicit "Print" action
+    if (actionPrintDocument) {
+        actionPrintDocument.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.print();
+        });
+    }
+})();
+</script>
+{% endblock %}

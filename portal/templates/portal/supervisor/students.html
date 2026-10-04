@@ -1,0 +1,364 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Students Roster & Audits | Supervisor Center{% endblock %}
+{% block page_title %}Students Directory & Performance Audits{% endblock %}
+{% block page_subtitle %}Search students class-wise, monitor mock test attempts, and inspect full answer reports{% endblock %}
+
+{% block supervisor_content %}
+
+<!-- Header Action Buttons -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <div>
+        <span class="badge bg-secondary-subtle text-secondary fw-bold">{{ students.count }} Students Listed</span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'portal:supervisor_student_create' %}" class="btn btn-arohan-primary btn-sm fw-bold">
+            <i class="fa-solid fa-user-plus me-1"></i> Add Individual Student
+        </a>
+        <a href="{% url 'portal:superuser_bulk_upload_students' %}" class="btn btn-outline-success btn-sm fw-semibold">
+            <i class="fa-solid fa-file-arrow-up me-1"></i> Bulk Upload Students (CSV)
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="card-custom p-3 bg-white mb-4">
+    <form method="GET" action="{% url 'portal:supervisor_students' %}" class="row g-2 align-items-center">
+        
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" class="form-control" placeholder="Search by Student Name or Roll Number..." value="{{ search_query }}">
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <select name="class_id" class="form-select">
+                <option value="">-- All Classes & Batches --</option>
+                {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                        {{ c.name }} ({{ c.students.count }} students)
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+            {% if search_query or selected_class_id %}
+                <a href="{% url 'portal:supervisor_students' %}" class="btn btn-outline-secondary">Reset</a>
+            {% endif %}
+        </div>
+
+    </form>
+</div>
+
+<!-- Students Table -->
+<div class="card-custom p-4 bg-white mb-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-users text-primary"></i>
+            <span>Students Roster</span>
+            <span class="badge bg-secondary-subtle text-secondary">{{ students.count }}</span>
+        </h5>
+
+        <!-- Bulk Selection Action Bar -->
+        <div id="bulkActionsToolbar" class="d-none align-items-center gap-2 flex-wrap">
+            <span class="badge bg-danger-subtle text-danger fw-bold py-2 px-3 rounded-pill" id="selectedCountBadge">
+                0 Selected
+            </span>
+            <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm d-inline-flex align-items-center gap-1" id="bulkDeleteBtn">
+                <i class="fa-solid fa-trash-can"></i> Delete Selected
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSelectionBtn" title="Clear selection">
+                Deselect
+            </button>
+        </div>
+    </div>
+
+    {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small" id="studentsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 38px;">
+                            <div class="form-check m-0">
+                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" title="Select all students">
+                            </div>
+                        </th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Class / Batch</th>
+                        <th>Contact</th>
+                        <th>Total Attempts</th>
+                        <th>Status</th>
+                        <th class="text-end">Student Audit & Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                        <tr id="studentRow_{{ s.id }}">
+                            <td>
+                                <div class="form-check m-0">
+                                    <input type="checkbox" class="form-check-input student-checkbox" value="{{ s.id }}" data-student-name="{{ s.name }}" data-roll="{{ s.roll_number }}">
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border fw-bold">{{ s.roll_number }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'portal:supervisor_student_detail' s.id %}" class="fw-bold text-decoration-none text-dark fs-6">
+                                    {{ s.name }}
+                                </a>
+                                {% if s.email %}
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ s.email }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-soft-primary">{{ s.student_class.name }}</span>
+                            </td>
+                            <td class="text-muted">{{ s.phone|default:"-" }}</td>
+                            <td>
+                                {% if s.attempt_count > 0 %}
+                                    <span class="badge bg-dark px-2 py-1">{{ s.attempt_count }} Attempts</span>
+                                {% else %}
+                                    <span class="text-muted">0 Attempts</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.is_active %}
+                                    <span class="badge badge-soft-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-soft-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{% url 'portal:supervisor_student_detail' s.id %}" class="btn btn-sm btn-primary py-1 px-3 fw-bold" title="Open Student Audit Ledger">
+                                        <i class="fa-solid fa-chart-line me-1"></i> Audit & History
+                                    </a>
+                                    <a href="{% url 'portal:supervisor_student_edit' s.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit Student">
+                                        <i class="fa-solid fa-pen text-muted"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-light border text-danger py-1 px-2 btn-delete-single"
+                                            data-student-id="{{ s.id }}"
+                                            data-student-name="{{ s.name }}"
+                                            data-roll="{{ s.roll_number }}"
+                                            data-delete-url="{% url 'portal:supervisor_student_delete' s.id %}"
+                                            title="Delete Student">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 bg-light rounded-3">
+            <i class="fa-solid fa-user-slash text-muted fs-1 mb-3"></i>
+            <h6 class="fw-bold text-dark">No students found</h6>
+            <p class="text-muted small mb-3">No students matched your search or class filter.</p>
+            <a href="{% url 'portal:supervisor_student_create' %}" class="btn btn-sm btn-primary">
+                + Add Student Now
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Single Student Delete Confirmation Modal -->
+<div class="modal fade" id="deleteSingleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white py-3">
+                <h6 class="modal-title fw-bold mb-0">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Student
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" id="deleteSingleForm" action="">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <div class="modal-body p-4">
+                    <p class="mb-2 text-dark">Are you sure you want to permanently delete this student?</p>
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="fw-bold text-dark fs-6" id="deleteSingleName">Student Name</div>
+                        <div class="text-muted small mt-1" id="deleteSingleMeta">Roll Number: ARO-101</div>
+                    </div>
+                    <div class="alert alert-warning py-2 px-3 small border-0 mb-0 d-flex align-items-center gap-2 rounded-3">
+                        <i class="fa-solid fa-circle-exclamation text-warning fs-5"></i>
+                        <span>All exam attempts and answer records for this student will also be removed.</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm fw-bold px-3">
+                        <i class="fa-solid fa-trash me-1"></i> Yes, Delete Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Multi-Select Delete Confirmation Modal -->
+<div class="modal fade" id="deleteBulkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white py-3">
+                <h6 class="modal-title fw-bold mb-0">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Selected Students
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'portal:supervisor_students_bulk_delete' %}" id="deleteBulkForm">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="student_ids_csv" id="bulkStudentIdsCsv" value="">
+                <div class="modal-body p-4">
+                    <p class="mb-2 text-dark">
+                        Are you sure you want to permanently delete the <strong class="text-danger" id="bulkDeleteCountText">0 selected students</strong>?
+                    </p>
+                    <div class="p-2 bg-light rounded-3 border mb-3" style="max-height: 180px; overflow-y: auto;">
+                        <ul class="list-unstyled mb-0 small" id="bulkDeleteStudentsList">
+                            <!-- Populated dynamically via JS -->
+                        </ul>
+                    </div>
+                    <div class="alert alert-danger py-2 px-3 small border-0 mb-0 d-flex align-items-center gap-2 rounded-3">
+                        <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                        <span>This action cannot be undone. All attempt history for these students will be permanently deleted.</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm fw-bold px-3">
+                        <i class="fa-solid fa-trash-can me-1"></i> Delete Selected Students
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    const bulkToolbar = document.getElementById('bulkActionsToolbar');
+    const selectedCountBadge = document.getElementById('selectedCountBadge');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+
+    const deleteSingleModalEl = document.getElementById('deleteSingleModal');
+    const deleteSingleModal = deleteSingleModalEl ? new bootstrap.Modal(deleteSingleModalEl) : null;
+    const deleteSingleForm = document.getElementById('deleteSingleForm');
+    const deleteSingleName = document.getElementById('deleteSingleName');
+    const deleteSingleMeta = document.getElementById('deleteSingleMeta');
+
+    const deleteBulkModalEl = document.getElementById('deleteBulkModal');
+    const deleteBulkModal = deleteBulkModalEl ? new bootstrap.Modal(deleteBulkModalEl) : null;
+    const bulkStudentIdsCsv = document.getElementById('bulkStudentIdsCsv');
+    const bulkDeleteCountText = document.getElementById('bulkDeleteCountText');
+    const bulkDeleteStudentsList = document.getElementById('bulkDeleteStudentsList');
+
+    function updateSelectionState() {
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        studentCheckboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (cb.checked) {
+                row.classList.add('table-danger', 'bg-opacity-10');
+            } else {
+                row.classList.remove('table-danger', 'bg-opacity-10');
+            }
+        });
+
+        if (count > 0) {
+            bulkToolbar.classList.remove('d-none');
+            bulkToolbar.classList.add('d-flex');
+            selectedCountBadge.textContent = `${count} Selected`;
+        } else {
+            bulkToolbar.classList.remove('d-flex');
+            bulkToolbar.classList.add('d-none');
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = (count > 0 && count === studentCheckboxes.length);
+            selectAllCheckbox.indeterminate = (count > 0 && count < studentCheckboxes.length);
+        }
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function () {
+            const isChecked = this.checked;
+            studentCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectionState();
+        });
+    }
+
+    studentCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelectionState);
+    });
+
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function () {
+            studentCheckboxes.forEach(cb => { cb.checked = false; });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            updateSelectionState();
+        });
+    }
+
+    // Individual delete click
+    document.querySelectorAll('.btn-delete-single').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const deleteUrl = this.dataset.deleteUrl;
+            const name = this.dataset.studentName;
+            const roll = this.dataset.roll;
+
+            if (deleteSingleForm) deleteSingleForm.action = deleteUrl;
+            if (deleteSingleName) deleteSingleName.textContent = name;
+            if (deleteSingleMeta) deleteSingleMeta.textContent = `Roll Number: ${roll}`;
+
+            if (deleteSingleModal) deleteSingleModal.show();
+        });
+    });
+
+    // Bulk delete click
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function () {
+            const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+            if (checkedBoxes.length === 0) return;
+
+            const ids = [];
+            bulkDeleteStudentsList.innerHTML = '';
+
+            checkedBoxes.forEach(cb => {
+                ids.push(cb.value);
+                const li = document.createElement('li');
+                li.className = 'py-1 border-bottom d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <span class="fw-semibold text-dark">${cb.dataset.studentName}</span>
+                    <span class="badge bg-light text-secondary border">Roll: ${cb.dataset.roll}</span>
+                `;
+                bulkDeleteStudentsList.appendChild(li);
+            });
+
+            bulkStudentIdsCsv.value = ids.join(',');
+            bulkDeleteCountText.textContent = `${ids.length} student${ids.length > 1 ? 's' : ''}`;
+
+            if (deleteBulkModal) deleteBulkModal.show();
+        });
+    }
+});
+</script>
+{% endblock %}

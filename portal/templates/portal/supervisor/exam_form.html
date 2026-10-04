@@ -1,0 +1,455 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}Mock Test Configuration | Supervisor Center{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block supervisor_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card-custom p-4 p-md-5 bg-white mb-4">
+            
+            <div class="mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1">{{ title }}</h4>
+                        <p class="text-muted small mb-0">Configure test details, assign target classes, and pick subjects dynamically from the database.</p>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill small fw-semibold">
+                        <i class="fa-solid fa-graduation-cap me-1"></i>Subject-Wise Scheduling
+                    </span>
+                </div>
+            </div>
+
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-circle-exclamation fs-5 me-2 text-danger"></i>
+                    <div>
+                        <strong>Please check the form for errors:</strong>
+                        <ul class="mb-0 mt-1 small">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <form method="POST" id="mockTestForm">
+                {% csrf_token %}
+
+                <!-- Row 1: Title and Exam Code -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-dark small">Mock Test Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small">Exam Code (e.g. MT-SCI-01)</label>
+                        {{ form.code }}
+                        {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Row 2: Assigned Classes / Batches -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label fw-bold text-dark small mb-0">
+                            <i class="fa-solid fa-graduation-cap text-primary me-1"></i>Assigned Classes / Batches *
+                        </label>
+                        <span class="badge bg-light text-muted border small fw-normal">
+                            <i class="fa-brands fa-windows me-1"></i>Hold Ctrl / Cmd to select multiple
+                        </span>
+                    </div>
+                    {{ form.classes }}
+                    <div class="form-text small text-muted">
+                        Select one or more classes. The subject dropdown below will dynamically filter subjects available in the database for your selection.
+                    </div>
+                    {% if form.classes.errors %}<div class="text-danger small mt-1">{{ form.classes.errors.0 }}</div>{% endif %}
+                </div>
+
+                <!-- Row 3: Subject (Dynamic per Class) & Duration -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label fw-bold text-dark small mb-0" for="dynamicSubjectSelect">
+                                <i class="fa-solid fa-book-open text-primary me-1"></i>Subject (Dynamic from Database) *
+                            </label>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-semibold" id="subjectAvailabilityBadge">
+                                <i class="fa-solid fa-database me-1"></i>0 Subjects
+                            </span>
+                        </div>
+
+                        <!-- Dynamic Select Dropdown -->
+                        <div class="position-relative">
+                            <select id="dynamicSubjectSelect" class="form-select form-select-md fw-medium shadow-none">
+                                <option value="">-- Select a class above to load subjects --</option>
+                            </select>
+                        </div>
+
+                        <!-- Hidden Form Field bound to Django ModelForm -->
+                        <div id="hiddenSubjectFieldContainer" style="display: none;">
+                            {{ form.subject }}
+                        </div>
+
+                        <!-- Inline New Subject Input (Collapsible) -->
+                        <div id="customSubjectWrapper" class="mt-2" style="display: none;">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-primary text-white fw-semibold">
+                                    <i class="fa-solid fa-plus me-1"></i>New Subject:
+                                </span>
+                                <input type="text" id="customSubjectInput" class="form-control" placeholder="Enter new subject name (e.g. Social Science)...">
+                                <button type="button" class="btn btn-outline-secondary" id="btnCancelCustomSubject" title="Back to subject list">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div class="form-text small text-success mt-1">
+                                <i class="fa-solid fa-circle-check me-1"></i>This new subject will automatically be saved into the database for the selected class.
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <div class="form-text small text-muted" id="subjectHelperText">
+                                Pick an existing subject from the database or enter a new one.
+                            </div>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary" id="btnToggleNewSubject" style="font-size: 0.76rem;">
+                                <i class="fa-solid fa-circle-plus me-1"></i><span id="btnToggleNewSubjectText">+ Add New Subject</span>
+                            </button>
+                        </div>
+                        {% if form.subject.errors %}<div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Duration (Minutes, 0 for unlimited)</label>
+                        {{ form.duration_minutes }}
+                        <div class="form-text small text-muted">Test timer duration. Set to 0 for unlimited practice time.</div>
+                        {% if form.duration_minutes.errors %}<div class="text-danger small mt-1">{{ form.duration_minutes.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Row 4: Passing Percentage and Negative Marking -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Passing Percentage (%)</label>
+                        {{ form.passing_percentage }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark small">Negative Marking per Wrong Question</label>
+                        {{ form.negative_marking }}
+                    </div>
+                </div>
+
+                <!-- Row 5: Shuffle and Active Checkboxes -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check p-2 bg-light rounded border">
+                            {{ form.shuffle_questions }}
+                            <label class="form-check-label small fw-semibold text-dark">Shuffle Question Order for Each Attempt</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check p-2 bg-light rounded border">
+                            {{ form.is_active }}
+                            <label class="form-check-label small fw-semibold text-dark">Active & Published (Visible to Students)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 6: Description -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">Description / Syllabus</label>
+                    {{ form.description }}
+                </div>
+
+                <!-- Row 7: Instructions -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small">Instructions for Students</label>
+                    {{ form.instructions }}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'portal:supervisor_exams' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-arohan-primary px-4 fw-bold">
+                        <i class="fa-solid fa-save me-1"></i>Save Mock Test
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Embedded Class Subjects Database JSON -->
+<script id="classSubjectsData" type="application/json">
+{{ class_subjects_json|safe }}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Parse database class-to-subjects map
+    const classDataEl = document.getElementById('classSubjectsData');
+    let classSubjectsMap = {};
+    if (classDataEl) {
+        try {
+            classSubjectsMap = JSON.parse(classDataEl.textContent.trim());
+        } catch (e) {
+            console.error("Could not parse classSubjectsData:", e);
+        }
+    }
+
+    // 2. DOM elements
+    const classesSelect = document.getElementById('id_classes');
+    const dynamicSelect = document.getElementById('dynamicSubjectSelect');
+    const hiddenSubjectInput = document.getElementById('id_subject');
+    const customWrapper = document.getElementById('customSubjectWrapper');
+    const customInput = document.getElementById('customSubjectInput');
+    const badge = document.getElementById('subjectAvailabilityBadge');
+    const helperText = document.getElementById('subjectHelperText');
+    const btnToggleNew = document.getElementById('btnToggleNewSubject');
+    const btnToggleNewText = document.getElementById('btnToggleNewSubjectText');
+    const btnCancelCustom = document.getElementById('btnCancelCustomSubject');
+    const form = document.getElementById('mockTestForm');
+
+    // Hide default raw input
+    if (hiddenSubjectInput) {
+        hiddenSubjectInput.style.display = 'none';
+    }
+
+    // Determine initial subject
+    let initialSubject = (hiddenSubjectInput ? hiddenSubjectInput.value : '').trim();
+
+    function getSelectedClassIds() {
+        if (!classesSelect) return [];
+        return Array.from(classesSelect.selectedOptions).map(opt => opt.value).filter(Boolean);
+    }
+
+    function showCustomInput() {
+        customWrapper.style.display = 'block';
+        customInput.focus();
+        btnToggleNewText.textContent = 'Hide New Subject';
+    }
+
+    function hideCustomInput() {
+        customWrapper.style.display = 'none';
+        btnToggleNewText.textContent = '+ Add New Subject';
+        if (customInput) customInput.classList.remove('is-invalid');
+    }
+
+    function updateSubjectsDropdown(targetSubjectToSelect = null) {
+        const selectedIds = getSelectedClassIds();
+        dynamicSelect.innerHTML = '';
+
+        if (selectedIds.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '-- Select a class above to load subjects --';
+            dynamicSelect.appendChild(opt);
+
+            badge.innerHTML = '<i class="fa-solid fa-database me-1"></i>0 Subjects';
+            badge.className = 'badge bg-light text-muted border small fw-normal';
+            helperText.textContent = 'Select one or more classes above to load subjects from database.';
+            hideCustomInput();
+            return;
+        }
+
+        let totalSubsCount = 0;
+        let subjectsList = [];
+        let seenNames = new Set();
+
+        if (selectedIds.length === 1) {
+            const cid = selectedIds[0];
+            const cInfo = classSubjectsMap[cid] || { class_name: 'Selected Class', subjects: [] };
+            const subs = cInfo.subjects || [];
+            totalSubsCount = subs.length;
+
+            const headerOpt = document.createElement('option');
+            headerOpt.value = '';
+            if (subs.length === 0) {
+                headerOpt.textContent = `-- No subjects in database for ${cInfo.class_name} --`;
+            } else {
+                headerOpt.textContent = `-- Select Subject (${subs.length} available for ${cInfo.class_name}) --`;
+            }
+            dynamicSelect.appendChild(headerOpt);
+
+            subs.forEach(subName => {
+                const opt = document.createElement('option');
+                opt.value = subName;
+                opt.textContent = subName;
+                dynamicSelect.appendChild(opt);
+                subjectsList.push(subName);
+                seenNames.add(subName.toLowerCase());
+            });
+        } else {
+            // Multiple classes selected
+            const headerOpt = document.createElement('option');
+            headerOpt.value = '';
+            headerOpt.textContent = `-- Select Subject from ${selectedIds.length} classes --`;
+            dynamicSelect.appendChild(headerOpt);
+
+            selectedIds.forEach(cid => {
+                const cInfo = classSubjectsMap[cid] || { class_name: `Class #${cid}`, subjects: [] };
+                const subs = cInfo.subjects || [];
+                totalSubsCount += subs.length;
+                if (subs.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = `${cInfo.class_name} (${subs.length} subjects)`;
+                    subs.forEach(subName => {
+                        const opt = document.createElement('option');
+                        opt.value = subName;
+                        opt.textContent = subName;
+                        group.appendChild(opt);
+                        subjectsList.push(subName);
+                        seenNames.add(subName.toLowerCase());
+                    });
+                    dynamicSelect.appendChild(group);
+                }
+            });
+        }
+
+        // Add '+ Add New Subject for this class...' option
+        const newOption = document.createElement('option');
+        newOption.value = '__NEW__';
+        newOption.textContent = '+ Add / Enter New Subject for this class...';
+        dynamicSelect.appendChild(newOption);
+
+        // Update badge and helper description
+        if (totalSubsCount === 0) {
+            badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>0 Subjects Found';
+            badge.className = 'badge bg-warning-subtle text-dark border border-warning-subtle small fw-semibold';
+            helperText.innerHTML = '<span class="text-warning">No subjects found in DB for this class. Select <b>+ Add New Subject</b> to create one.</span>';
+        } else {
+            badge.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>${totalSubsCount} Subject${totalSubsCount > 1 ? 's' : ''} in DB`;
+            badge.className = 'badge bg-success-subtle text-success border border-success-subtle small fw-semibold';
+            helperText.textContent = `Pick an existing subject from the ${totalSubsCount} available in database, or add a new one.`;
+        }
+
+        // Selection restoration / sync logic
+        const subjectToSet = targetSubjectToSelect || (hiddenSubjectInput ? hiddenSubjectInput.value : '');
+        if (subjectToSet && subjectToSet !== '__NEW__') {
+            let matched = false;
+            for (let i = 0; i < dynamicSelect.options.length; i++) {
+                if (dynamicSelect.options[i].value.toLowerCase() === subjectToSet.toLowerCase()) {
+                    dynamicSelect.selectedIndex = i;
+                    matched = true;
+                    if (hiddenSubjectInput) hiddenSubjectInput.value = dynamicSelect.options[i].value;
+                    hideCustomInput();
+                    break;
+                }
+            }
+            if (!matched && subjectToSet.trim() !== '') {
+                // Pre-existing subject value on exam not listed in current class subjects
+                const customOpt = document.createElement('option');
+                customOpt.value = subjectToSet;
+                customOpt.textContent = `${subjectToSet} (Existing Exam Subject)`;
+                dynamicSelect.insertBefore(customOpt, newOption);
+                customOpt.selected = true;
+                if (hiddenSubjectInput) hiddenSubjectInput.value = subjectToSet;
+                hideCustomInput();
+            }
+        } else if (totalSubsCount === 0 && selectedIds.length > 0) {
+            // If class has no subjects in DB, automatically select __NEW__ and open custom input
+            dynamicSelect.value = '__NEW__';
+            showCustomInput();
+        } else {
+            hideCustomInput();
+        }
+    }
+
+    // Dynamic Select change event
+    dynamicSelect.addEventListener('change', function () {
+        dynamicSelect.classList.remove('is-invalid');
+        if (this.value === '__NEW__') {
+            showCustomInput();
+            if (hiddenSubjectInput) {
+                hiddenSubjectInput.value = customInput.value.trim();
+            }
+        } else {
+            hideCustomInput();
+            if (hiddenSubjectInput) {
+                hiddenSubjectInput.value = this.value;
+            }
+        }
+    });
+
+    // Custom text input typing
+    customInput.addEventListener('input', function () {
+        customInput.classList.remove('is-invalid');
+        if (dynamicSelect.value === '__NEW__' || customWrapper.style.display !== 'none') {
+            if (hiddenSubjectInput) {
+                hiddenSubjectInput.value = this.value.trim();
+            }
+        }
+    });
+
+    // Cancel button in custom input
+    if (btnCancelCustom) {
+        btnCancelCustom.addEventListener('click', function () {
+            hideCustomInput();
+            if (dynamicSelect.options.length > 2) {
+                dynamicSelect.selectedIndex = 1;
+                if (hiddenSubjectInput) hiddenSubjectInput.value = dynamicSelect.value;
+            } else {
+                dynamicSelect.selectedIndex = 0;
+                if (hiddenSubjectInput) hiddenSubjectInput.value = '';
+            }
+        });
+    }
+
+    // Toggle button below dropdown
+    if (btnToggleNew) {
+        btnToggleNew.addEventListener('click', function () {
+            if (customWrapper.style.display === 'none') {
+                dynamicSelect.value = '__NEW__';
+                showCustomInput();
+            } else {
+                hideCustomInput();
+                if (dynamicSelect.options.length > 2) {
+                    dynamicSelect.selectedIndex = 1;
+                    if (hiddenSubjectInput) hiddenSubjectInput.value = dynamicSelect.value;
+                } else {
+                    dynamicSelect.selectedIndex = 0;
+                    if (hiddenSubjectInput) hiddenSubjectInput.value = '';
+                }
+            }
+        });
+    }
+
+    // Class selection change listener
+    if (classesSelect) {
+        classesSelect.addEventListener('change', function () {
+            // Keep current subject if possible, otherwise update
+            updateSubjectsDropdown(hiddenSubjectInput ? hiddenSubjectInput.value : null);
+        });
+    }
+
+    // Form submit validation
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const currentSubject = (hiddenSubjectInput ? hiddenSubjectInput.value : '').trim();
+            if (!currentSubject) {
+                e.preventDefault();
+                dynamicSelect.classList.add('is-invalid');
+                dynamicSelect.focus();
+                if (customWrapper.style.display !== 'none') {
+                    customInput.classList.add('is-invalid');
+                    customInput.focus();
+                }
+                alert('Please select or enter a Subject for this mock test.');
+                return false;
+            }
+        });
+    }
+
+    // Initial populate on load
+    updateSubjectsDropdown(initialSubject);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Bulk Upload Students - Arohan Academy English School Superuser{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Back to Superuser Dashboard -->
+    <div class="mb-3">
+        <a href="{% url 'portal:superuser_dashboard' %}" class="text-decoration-none text-muted small fw-semibold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Superuser Dashboard
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-custom p-4 p-md-5 mb-4">
+                
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1">
+                            <i class="fa-solid fa-file-arrow-up text-primary me-2"></i>Bulk Upload Students (CSV)
+                        </h3>
+                        <p class="text-muted small mb-0">Upload student rosters class-wise using a standard CSV file.</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'portal:download_sample_student_csv' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fa-solid fa-download me-1"></i> Download Sample CSV
+                        </a>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">1. Target Class / Batch</label>
+                        {{ form.academic_class }}
+                        <div class="form-text text-muted small">All students in this CSV will be enrolled into the selected class.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">2. Choose CSV File</label>
+                        {{ form.csv_file }}
+                        <div class="form-text text-muted small">Accepts standard .csv UTF-8 format.</div>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-circle-info text-primary me-1"></i>Required CSV Columns Format:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered bg-white mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>roll_number (Required)</th>
+                                        <th>name (Required)</th>
+                                        <th>phone (Optional)</th>
+                                        <th>email (Optional)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ARO-101</td>
+                                        <td>Rahul Sharma</td>
+                                        <td>9876543210</td>
+                                        <td>rahul@example.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ARO-102</td>
+                                        <td>Priya Patel</td>
+                                        <td>9876543211</td>
+                                        <td>priya@example.com</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'portal:superuser_students' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-arohan-primary px-4 fw-bold">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload & Import Students
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

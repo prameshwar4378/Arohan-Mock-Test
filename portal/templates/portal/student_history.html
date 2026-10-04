@@ -1,0 +1,204 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}My Test Attempts: {{ student.name }} | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    .attempt-mobile-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.15rem;
+        transition: all 0.2s ease;
+    }
+
+    .attempt-mobile-card:active {
+        background: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-lg py-3 py-md-4">
+
+    <!-- Back to Portal -->
+    <div class="mb-3">
+        <a href="{% url 'portal:index' %}?class_id={{ student.student_class.id }}&student_id={{ student.id }}" 
+           id="backToPortalBtn"
+           class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to Mock Test Desk</span>
+        </a>
+    </div>
+
+    <!-- Student Header Badge with School Branding -->
+    <div class="card-custom p-3 p-md-4 mb-4 shadow-sm">
+        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" class="rounded bg-light p-1 border" style="height: 38px; width: auto; object-fit: contain;">
+            <div>
+                <div class="fw-bold text-dark small">Arohan Academy English School</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Student Academic Performance Ledger & Attempt Record</div>
+            </div>
+        </div>
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 52px; height: 52px; min-width: 52px;">
+                    {{ student.name|make_list|first|upper }}
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4">{{ student.name }}</h4>
+                    <div class="small text-muted mt-1">
+                        <span>Roll: <strong class="text-dark">{{ student.roll_number }}</strong></span> &bull; 
+                        <span>Class: <strong class="text-dark">{{ student.student_class.name }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="badge bg-primary px-3 py-2 fs-6">
+                    <i class="fa-solid fa-list-check me-1"></i> {{ attempts.count }} Total Attempts Made
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attempts Records -->
+    <div class="card-custom p-3 p-md-4 mb-4">
+        <h5 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>My Examination History
+        </h5>
+
+        {% if attempts %}
+            
+            <!-- Mobile-Friendly Cards List (Visible on mobile/tablet < 768px) -->
+            <div class="d-flex flex-column gap-3 d-md-none">
+                {% for att in attempts %}
+                    <div class="attempt-mobile-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary text-white" style="font-size:0.7rem;">{{ att.exam.subject|default:"General" }}</span>
+                            <span class="badge bg-dark">Attempt #{{ att.attempt_number }}</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">{{ att.exam.title }}</h6>
+                        
+                        <div class="row g-2 text-center p-2 bg-light rounded-3 mb-3 small">
+                            <div class="col-4">
+                                <span class="text-muted d-block" style="font-size:0.7rem;">Score</span>
+                                <strong class="text-dark">{{ att.score_obtained }} / {{ att.max_score }}</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block" style="font-size:0.7rem;">Percent</span>
+                                <strong class="text-dark">{{ att.percentage }}%</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block" style="font-size:0.7rem;">Result</span>
+                                {% if att.is_passed %}
+                                    <span class="badge bg-success" style="font-size:0.72rem;">Passed</span>
+                                {% else %}
+                                    <span class="badge bg-danger" style="font-size:0.72rem;">Failed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                            <span><i class="fa-solid fa-stopwatch me-1"></i>{{ att.formatted_time_taken }}</span>
+                            <span><i class="fa-solid fa-calendar me-1"></i>{{ att.started_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+
+                        <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-outline-primary btn-sm w-100 fw-bold py-2">
+                            <i class="fa-solid fa-file-invoice me-1"></i> View Full Verification Report &rarr;
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop Table (Visible on md and above) -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Exam Title</th>
+                            <th>Attempt #</th>
+                            <th>Date & Time</th>
+                            <th>Duration</th>
+                            <th>Score / Max</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                            <th class="text-end">Verification Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attempts %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ att.exam.title }}</div>
+                                    <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.7rem;">{{ att.exam.subject|default:"General" }}</span>
+                                </td>
+                                <td><span class="badge bg-dark">Attempt #{{ att.attempt_number }}</span></td>
+                                <td class="text-muted">{{ att.started_at|date:"d M Y, h:i A" }}</td>
+                                <td class="text-muted">{{ att.formatted_time_taken }}</td>
+                                <td><strong>{{ att.score_obtained }}</strong> / {{ att.max_score }}</td>
+                                <td><strong>{{ att.percentage }}%</strong></td>
+                                <td>
+                                    {% if att.is_passed %}
+                                        <span class="badge bg-success-subtle text-success px-2 py-1">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Passed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger px-2 py-1">
+                                            <i class="fa-solid fa-circle-xmark me-1"></i> Failed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                                        View Report &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="text-center py-5 bg-light rounded-3">
+                <i class="fa-solid fa-folder-open text-muted fs-1 mb-3"></i>
+                <h6 class="fw-bold text-dark mb-1">No exam attempts found yet</h6>
+                <p class="text-muted small mb-3">You haven't attempted any mock tests yet.</p>
+                <a href="{% url 'portal:index' %}" class="btn btn-arohan-primary btn-sm px-3">
+                    Start a Mock Test Now
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const backBtn = document.getElementById('backToPortalBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function (e) {
+            const savedClassId = sessionStorage.getItem('arohan_class_id') || '{{ student.student_class.id }}';
+            const savedStudentId = sessionStorage.getItem('arohan_student_id') || '{{ student.id }}';
+            const savedExamId = sessionStorage.getItem('arohan_exam_id') || '';
+            const savedFilter = sessionStorage.getItem('arohan_filter_query') || '';
+
+            const params = new URLSearchParams();
+            if (savedClassId) params.set('class_id', savedClassId);
+            if (savedStudentId) params.set('student_id', savedStudentId);
+            if (savedExamId) params.set('exam_id', savedExamId);
+            if (savedFilter) params.set('q', savedFilter);
+
+            window.location.href = `/?${params.toString()}`;
+            e.preventDefault();
+        });
+    }
+});
+</script>
+{% endblock %}

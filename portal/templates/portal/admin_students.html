@@ -1,0 +1,136 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Students Directory - Arohan Academy English School{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">
+                <i class="fa-solid fa-users text-primary me-2"></i>Class-Wise Students Directory
+            </h2>
+            <p class="text-muted small mb-0">Browse students, search by roll number, and review individual test performance.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'portal:superuser_bulk_upload_students' %}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-file-arrow-up me-1"></i> Bulk Upload Students (CSV)
+            </a>
+            <a href="{% url 'portal:superuser_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                &larr; Superuser Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="card-custom p-3 mb-4">
+        <form method="GET" action="{% url 'portal:superuser_students' %}" class="row g-2 align-items-center">
+            
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by Student Name or Roll Number..." value="{{ search_query }}">
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <select name="class_id" class="form-select">
+                    <option value="">-- All Classes & Batches --</option>
+                    {% for c in classes %}
+                        <option value="{{ c.id }}" {% if selected_class_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                            {{ c.name }} ({{ c.students.count }} students)
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-arohan-primary w-100">
+                    Filter
+                </button>
+                {% if search_query or selected_class_id %}
+                    <a href="{% url 'portal:superuser_students' %}" class="btn btn-outline-secondary">
+                        Reset
+                    </a>
+                {% endif %}
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-dark">Enrolled Students Roster</h5>
+            <span class="badge bg-secondary-subtle text-secondary">{{ students.count }} Students Listed</span>
+        </div>
+
+        {% if students %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Class / Batch</th>
+                            <th>Contact</th>
+                            <th>Total Attempts</th>
+                            <th>Status</th>
+                            <th class="text-end">Student Audit & History</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-2 py-1 fw-bold">{{ s.roll_number }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'portal:superuser_student_detail' s.id %}" class="fw-bold text-decoration-none text-dark">
+                                        {{ s.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary">{{ s.student_class.name }}</span>
+                                </td>
+                                <td class="small text-muted">{{ s.phone|default:"-" }}</td>
+                                <td>
+                                    {% if s.attempt_count > 0 %}
+                                        <span class="badge bg-dark">{{ s.attempt_count }} Attempts</span>
+                                    {% else %}
+                                        <span class="text-muted small">0 Attempts</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if s.is_active %}
+                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'portal:superuser_student_detail' s.id %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                                        <i class="fa-solid fa-chart-line me-1"></i> View All Attempts & Reports &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-light rounded-3">
+                <i class="fa-solid fa-user-slash text-muted fs-1 mb-3"></i>
+                <h6 class="fw-bold text-dark mb-1">No students found matching your criteria</h6>
+                <p class="text-muted small mb-3">Upload your class student list via CSV or adjust filters.</p>
+                <a href="{% url 'portal:superuser_bulk_upload_students' %}" class="btn btn-arohan-primary btn-sm px-3">
+                    Bulk Upload Students Now
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

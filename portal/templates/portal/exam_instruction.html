@@ -1,0 +1,272 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Instructions: {{ exam.title }} | Arohan Academy English School{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admit-card {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px dashed #93c5fd;
+        border-radius: 16px;
+        padding: 1.25rem;
+    }
+
+    .stat-tile {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem;
+        text-align: center;
+    }
+
+    .start-btn-mobile {
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        border-radius: 14px;
+        touch-action: manipulation;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-lg py-3 py-md-4">
+
+    <!-- Back to Portal Home -->
+    <div class="mb-3">
+        <a href="{% url 'portal:index' %}?class_id={{ student.student_class.id }}&student_id={{ student.id }}&exam_id={{ exam.id }}" id="backToPortalBtn" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Change Student / Test</span>
+        </a>
+    </div>
+
+    <!-- Student Admit Card / Identity Badge -->
+    <div class="admit-card mb-4 shadow-sm">
+        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom border-primary-subtle">
+            <img src="{% static 'images/logo.png' %}" alt="Arohan Logo" class="rounded bg-white p-1" style="height: 36px; width: auto; object-fit: contain;">
+            <div>
+                <div class="fw-bold text-dark small">Arohan Academy English School</div>
+                <div class="text-primary fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">CBT EXAMINATION HALL PASS</div>
+            </div>
+        </div>
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 52px; height: 52px; min-width: 52px;">
+                    {{ student.name|make_list|first|upper }}
+                </div>
+                <div>
+                    <span class="badge bg-primary text-white" style="font-size: 0.68rem; letter-spacing: 0.5px;">CONFIRMED CANDIDATE</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ student.name }}</h4>
+                    <div class="small text-secondary mt-1">
+                        <span>Roll: <strong class="text-dark">{{ student.roll_number }}</strong></span> &bull; 
+                        <span>Class: <strong class="text-dark">{{ student.student_class.name }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="badge bg-dark px-3 py-2 fs-6">
+                    <i class="fa-solid fa-hashtag me-1"></i> Attempt #{{ next_attempt_number }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Test Briefing & Guidelines -->
+        <div class="col-lg-8">
+            <div class="card-custom p-3 p-md-4 mb-4">
+                
+                <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
+                    <div>
+                        <span class="badge bg-secondary-subtle text-secondary fw-bold text-uppercase mb-1">{{ exam.subject|default:"General" }}</span>
+                        <h3 class="fw-bold text-dark mb-0 fs-4 fs-md-3">{{ exam.title }}</h3>
+                    </div>
+                    {% if exam.code %}
+                        <span class="badge bg-dark text-white px-2 py-1">{{ exam.code }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- 4 Metrics Grid (2x2 on mobile, 4 in row on tablet) -->
+                <div class="row g-2 mb-4">
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-tile">
+                            <i class="fa-solid fa-list-check text-primary fs-5 mb-1"></i>
+                            <div class="small text-muted" style="font-size:0.75rem;">Questions</div>
+                            <h4 class="fw-bold mb-0 text-dark">{{ exam.total_questions_count }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-tile">
+                            <i class="fa-solid fa-stopwatch text-info fs-5 mb-1"></i>
+                            <div class="small text-muted" style="font-size:0.75rem;">Duration</div>
+                            <h4 class="fw-bold mb-0 text-dark">
+                                {% if exam.duration_minutes > 0 %}{{ exam.duration_minutes }}m{% else %}Unlimited{% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-tile">
+                            <i class="fa-solid fa-award text-warning fs-5 mb-1"></i>
+                            <div class="small text-muted" style="font-size:0.75rem;">Total Marks</div>
+                            <h4 class="fw-bold mb-0 text-dark">{{ exam.total_marks }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-tile">
+                            <i class="fa-solid fa-bullseye text-danger fs-5 mb-1"></i>
+                            <div class="small text-muted" style="font-size:0.75rem;">Negative Mark</div>
+                            <h4 class="fw-bold mb-0 text-dark">
+                                {% if exam.negative_marking > 0 %}-{{ exam.negative_marking }}{% else %}0{% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exam Instructions -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Important Guidelines
+                    </h6>
+                    <div class="p-3 bg-light rounded-3 border small">
+                        {% if exam.instructions %}
+                            {{ exam.instructions|linebreaks }}
+                        {% else %}
+                            <ol class="mb-0 ps-3">
+                                <li class="mb-2">All questions are Multiple Choice (MCQ) with 4 options.</li>
+                                <li class="mb-2">Select one option per question. You can change your choice anytime before submitting.</li>
+                                <li class="mb-2">Use the Question Palette drawer to navigate between questions.</li>
+                                <li class="mb-2">On timeout, the test auto-submits automatically.</li>
+                                <li class="mb-2">Instant verification report with solutions is displayed upon submit.</li>
+                                <li><strong>Unlimited Retakes:</strong> You can attempt this mock test multiple times.</li>
+                            </ol>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Confirmation Checkbox -->
+                <div class="form-check p-3 bg-light rounded-3 border mb-4">
+                    <input class="form-check-input ms-0 me-3" type="checkbox" id="agreeInstructions" style="width: 1.35em; height: 1.35em;">
+                    <label class="form-check-label fw-semibold text-dark small" for="agreeInstructions">
+                        I confirm that I am <strong>{{ student.name }}</strong> and I am ready to start the test.
+                    </label>
+                </div>
+
+                <!-- Start Action -->
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <a href="{% url 'portal:exam_take' exam.id %}?student_id={{ student.id }}" 
+                       id="proceedBtn" 
+                       class="btn btn-arohan-primary btn-lg start-btn-mobile px-5 disabled w-100 w-sm-auto shadow"
+                       tabindex="-1"
+                       aria-disabled="true">
+                        <i class="fa-solid fa-play me-2"></i> Start Mock Test Now
+                    </a>
+                    <a href="{% url 'portal:index' %}" class="btn btn-outline-secondary btn-lg start-btn-mobile w-100 w-sm-auto">
+                        Cancel
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right: Past Attempts Summary -->
+        <div class="col-lg-4">
+            <div class="card-custom p-3 p-md-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Previous Attempts ({{ past_attempts.count }})
+                    </h6>
+                </div>
+
+                {% if past_attempts %}
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        {% for att in past_attempts %}
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold small text-dark">Attempt #{{ att.attempt_number }}</span>
+                                    {% if att.is_passed %}
+                                        <span class="badge bg-success">Passed</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center small text-muted">
+                                    <span>Score: <strong>{{ att.score_obtained }}/{{ att.max_score }}</strong></span>
+                                    <span>{{ att.percentage }}%</span>
+                                </div>
+                                <div class="mt-2 text-end">
+                                    <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">
+                                        View Report &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 bg-light rounded-3 text-muted small">
+                        <i class="fa-solid fa-award text-warning fs-3 mb-2"></i>
+                        <p class="mb-0">This is your first attempt at this mock test. Best of luck!</p>
+                    </div>
+                {% endif %}
+
+                <div class="alert alert-warning border-0 small mt-3 mb-0" style="font-size:0.8rem;">
+                    <i class="fa-solid fa-lightbulb me-1"></i>
+                    <strong>Practice Tip:</strong> You can retake this exam as many times as you need to achieve 100%!
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const agreeCheckbox = document.getElementById('agreeInstructions');
+    const proceedBtn = document.getElementById('proceedBtn');
+
+    agreeCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+            proceedBtn.classList.remove('disabled');
+            proceedBtn.removeAttribute('tabindex');
+            proceedBtn.removeAttribute('aria-disabled');
+        } else {
+            proceedBtn.classList.add('disabled');
+            proceedBtn.setAttribute('tabindex', '-1');
+            proceedBtn.setAttribute('aria-disabled', 'true');
+        }
+    });
+
+    proceedBtn.addEventListener('click', function (e) {
+        if (this.classList.contains('disabled') || this.dataset.submitting === 'true') {
+            e.preventDefault();
+            return false;
+        }
+        this.dataset.submitting = 'true';
+        this.classList.add('disabled');
+        this.style.pointerEvents = 'none';
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Starting Mock Test...';
+    });
+
+    window.addEventListener('pageshow', function () {
+        delete proceedBtn.dataset.submitting;
+        proceedBtn.style.pointerEvents = '';
+        proceedBtn.innerHTML = '<i class="fa-solid fa-play me-2"></i> Start Mock Test Now';
+        if (agreeCheckbox && agreeCheckbox.checked) {
+            proceedBtn.classList.remove('disabled');
+            proceedBtn.removeAttribute('tabindex');
+            proceedBtn.removeAttribute('aria-disabled');
+        } else {
+            proceedBtn.classList.add('disabled');
+            proceedBtn.setAttribute('tabindex', '-1');
+            proceedBtn.setAttribute('aria-disabled', 'true');
+        }
+    });
+});
+</script>
+{% endblock %}

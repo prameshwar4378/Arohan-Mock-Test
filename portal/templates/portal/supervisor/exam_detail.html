@@ -1,0 +1,239 @@
+{% extends 'portal/supervisor/base_supervisor.html' %}
+
+{% block title %}{{ exam.title }} | Exam Overview{% endblock %}
+{% block page_title %}{{ exam.title }}{% endblock %}
+{% block page_subtitle %}Question bank management, student leaderboard, and submission analytics{% endblock %}
+
+{% block supervisor_content %}
+
+<!-- Back Link -->
+<div class="mb-3">
+    <a href="{% url 'portal:supervisor_exams' %}" class="text-decoration-none text-muted small fw-semibold">
+        &larr; Back to Mock Tests Catalog
+    </a>
+</div>
+
+<!-- Exam Profile & Action Bar -->
+<div class="card-custom p-4 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary text-white">{{ exam.subject|default:"General" }}</span>
+                {% if exam.code %}<span class="badge bg-dark">{{ exam.code }}</span>{% endif %}
+                {% for c in exam.classes.all %}
+                    <span class="badge badge-soft-primary">{{ c.name }}</span>
+                {% endfor %}
+            </div>
+            <h3 class="fw-bold text-dark mb-1">{{ exam.title }}</h3>
+            <p class="text-muted small mb-0">{{ exam.description|default:"No description provided." }}</p>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'portal:supervisor_exam_bulk_questions' exam.id %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Bulk Question Paper
+            </a>
+            <a href="{% url 'portal:supervisor_question_create' exam.id %}" class="btn btn-primary btn-sm fw-bold">
+                <i class="fa-solid fa-plus me-1"></i> Add Single Question
+            </a>
+            <a href="{% url 'portal:supervisor_exam_edit' exam.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-pen me-1"></i> Edit Settings
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Exam KPI Stats -->
+<div class="row g-3 mb-4 text-center">
+    <div class="col-6 col-md-3">
+        <div class="card-custom p-3 bg-white border-0">
+            <div class="small text-muted fw-semibold">Total Questions</div>
+            <h3 class="fw-bold mb-0 text-dark">{{ exam.total_questions_count }}</h3>
+            <div class="text-muted" style="font-size:0.75rem;">Total marks: {{ exam.total_marks }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-custom p-3 bg-white border-0">
+            <div class="small text-muted fw-semibold">Time Duration</div>
+            <h3 class="fw-bold mb-0 text-info">
+                {% if exam.duration_minutes > 0 %}{{ exam.duration_minutes }}m{% else %}Unlimited{% endif %}
+            </h3>
+            <div class="text-muted" style="font-size:0.75rem;">Auto-submit timer</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-custom p-3 bg-white border-0">
+            <div class="small text-muted fw-semibold">Average Score</div>
+            <h3 class="fw-bold mb-0 text-primary">{{ avg_score }}</h3>
+            <div class="text-muted" style="font-size:0.75rem;">Across all attempts</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-custom p-3 bg-white border-0">
+            <div class="small text-muted fw-semibold">Topper Score</div>
+            <h3 class="fw-bold mb-0 text-success">{{ highest_score }}</h3>
+            <div class="text-muted" style="font-size:0.75rem;">Highest achieved</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs: Question Bank vs. Leaderboard -->
+<div class="card-custom p-4 bg-white mb-4">
+    <ul class="nav nav-tabs mb-4" id="examDetailTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions-pane" type="button" role="tab">
+                <i class="fa-solid fa-clipboard-question text-primary me-2"></i>Question Bank ({{ questions.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="leaderboard-tab" data-bs-toggle="tab" data-bs-target="#leaderboard-pane" type="button" role="tab">
+                <i class="fa-solid fa-ranking-star text-warning me-2"></i>Student Submissions & Leaderboard ({{ attempts.count }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="examDetailTabContent">
+        
+        <!-- PANE 1: QUESTIONS BANK -->
+        <div class="tab-pane fade show active" id="questions-pane" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="small text-muted">Questions will appear in this order during the test:</span>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'portal:supervisor_exam_bulk_questions' exam.id %}" class="btn btn-warning btn-sm fw-bold">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Bulk Edit / Add Questions
+                    </a>
+                    <a href="{% url 'portal:supervisor_question_create' exam.id %}" class="btn btn-primary btn-sm fw-bold">
+                        <i class="fa-solid fa-plus me-1"></i> Add Single Question
+                    </a>
+                </div>
+            </div>
+
+            {% if questions %}
+                <div class="d-flex flex-column gap-3">
+                    {% for q in questions %}
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-dark">Q{{ q.order }}</span>
+                                    <span class="badge badge-soft-primary">+{{ q.marks }} Marks</span>
+                                    {% if q.negative_marks > 0 %}
+                                        <span class="badge badge-soft-danger">-{{ q.negative_marks }} Negative</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'portal:supervisor_question_edit' q.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit Question">
+                                        <i class="fa-solid fa-pen text-muted"></i> Edit
+                                    </a>
+                                    <a href="{% url 'portal:supervisor_question_delete' q.id %}" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Delete Question">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-semibold text-dark mb-2">{{ q.question_text|linebreaksbr }}</h6>
+
+                            <div class="row g-2 small mb-2">
+                                <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'A' %}bg-success-subtle fw-bold text-success border border-success-subtle{% else %}bg-white border{% endif %}">
+                                    <strong>A:</strong> {{ q.option_a }}
+                                    {% if q.correct_option == 'A' %}<i class="fa-solid fa-check ms-1"></i>{% endif %}
+                                </div>
+                                <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'B' %}bg-success-subtle fw-bold text-success border border-success-subtle{% else %}bg-white border{% endif %}">
+                                    <strong>B:</strong> {{ q.option_b }}
+                                    {% if q.correct_option == 'B' %}<i class="fa-solid fa-check ms-1"></i>{% endif %}
+                                </div>
+                                <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'C' %}bg-success-subtle fw-bold text-success border border-success-subtle{% else %}bg-white border{% endif %}">
+                                    <strong>C:</strong> {{ q.option_c }}
+                                    {% if q.correct_option == 'C' %}<i class="fa-solid fa-check ms-1"></i>{% endif %}
+                                </div>
+                                <div class="col-sm-6 p-2 rounded {% if q.correct_option == 'D' %}bg-success-subtle fw-bold text-success border border-success-subtle{% else %}bg-white border{% endif %}">
+                                    <strong>D:</strong> {{ q.option_d }}
+                                    {% if q.correct_option == 'D' %}<i class="fa-solid fa-check ms-1"></i>{% endif %}
+                                </div>
+                            </div>
+
+                            {% if q.explanation %}
+                                <div class="small text-muted p-2 bg-white rounded border">
+                                    <strong class="text-primary"><i class="fa-solid fa-lightbulb me-1"></i>Explanation:</strong> {{ q.explanation }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-light rounded-3">
+                    <i class="fa-solid fa-folder-open text-muted fs-1 mb-3"></i>
+                    <h6 class="fw-bold text-dark">No questions added to this mock test yet</h6>
+                    <p class="text-muted small mb-3">Add questions using the Smart Bulk Parser or add them individually.</p>
+                    <a href="{% url 'portal:supervisor_exam_bulk_questions' exam.id %}" class="btn btn-warning btn-sm fw-bold">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Bulk Question Paper Importer
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- PANE 2: LEADERBOARD & ATTEMPTS -->
+        <div class="tab-pane fade" id="leaderboard-pane" role="tabpanel">
+            {% if attempts %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Attempt #</th>
+                                <th>Score / Max</th>
+                                <th>Percentage</th>
+                                <th>Duration</th>
+                                <th>Submitted At</th>
+                                <th class="text-end">Verification Report</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in attempts %}
+                                <tr>
+                                    <td>
+                                        {% if forloop.counter == 1 %}
+                                            <i class="fa-solid fa-trophy text-warning fs-5"></i>
+                                        {% elif forloop.counter == 2 %}
+                                            <i class="fa-solid fa-medal text-secondary fs-5"></i>
+                                        {% elif forloop.counter == 3 %}
+                                            <i class="fa-solid fa-award text-danger fs-5"></i>
+                                        {% else %}
+                                            <span class="text-muted fw-bold">#{{ forloop.counter }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'portal:supervisor_student_detail' att.student.id %}" class="fw-bold text-decoration-none text-dark">
+                                            {{ att.student.name }}
+                                        </a>
+                                        <div class="text-muted" style="font-size:0.75rem;">Roll: {{ att.student.roll_number }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-soft-primary">{{ att.student.student_class.name }}</span>
+                                    </td>
+                                    <td><span class="badge bg-dark">#{{ att.attempt_number }}</span></td>
+                                    <td><strong class="text-dark">{{ att.score_obtained }}</strong> / {{ att.max_score }}</td>
+                                    <td><strong>{{ att.percentage }}%</strong></td>
+                                    <td class="text-muted">{{ att.formatted_time_taken }}</td>
+                                    <td class="text-muted">{{ att.started_at|date:"d M, h:i A" }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold">
+                                            View Report &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-light rounded-3 text-muted small">
+                    No students have attempted this mock test yet.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
