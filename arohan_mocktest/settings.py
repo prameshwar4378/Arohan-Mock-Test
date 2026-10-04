@@ -7,11 +7,24 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-bambml0t=mn&&rna*gcot@s&1xemc8z^huko516)@&)6wl+9r4'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-bambml0t=mn&&rna*gcot@s&1xemc8z^huko516)@&)6wl+9r4')
 
-DEBUG = True
+# In development, DEBUG defaults to True. In production, set DJANGO_DEBUG=False
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['*']
+# Configurable ALLOWED_HOSTS for production deployment
+allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = ['*']
+
+# CSRF Trusted Origins for reverse proxies and production domains
+csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if csrf_origins_env:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins_env.split(',') if o.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:2000', 'http://localhost:2000']
 
 # Application definition
 INSTALLED_APPS = [
@@ -159,3 +172,11 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+# Production security settings (automatically enforced when DEBUG=False)
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1')
+    CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() in ('true', '1')

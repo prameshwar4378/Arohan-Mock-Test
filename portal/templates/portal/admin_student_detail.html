@@ -138,9 +138,14 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-primary fw-semibold">
-                                        <i class="fa-solid fa-file-lines me-1"></i> View Full Report &rarr;
-                                    </a>
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{% url 'portal:attempt_result_pdf' att.id %}" class="btn btn-sm btn-outline-danger fw-semibold" title="Download Attempt PDF Scorecard" download>
+                                            <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                                        </a>
+                                        <a href="{% url 'portal:exam_result' att.id %}" target="_blank" class="btn btn-sm btn-primary fw-semibold">
+                                            <i class="fa-solid fa-file-lines me-1"></i> View Full Report &rarr;
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

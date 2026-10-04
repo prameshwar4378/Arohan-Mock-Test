@@ -24,6 +24,8 @@
                 <div class="d-flex justify-content-center gap-3">
                     {% if cancel_id %}
                         <a href="{% url cancel_url cancel_id %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {% elif '/' in cancel_url %}
+                        <a href="{{ cancel_url }}" class="btn btn-outline-secondary px-4">Cancel</a>
                     {% else %}
                         <a href="{% url cancel_url %}" class="btn btn-outline-secondary px-4">Cancel</a>
                     {% endif %}

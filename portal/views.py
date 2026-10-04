@@ -385,12 +385,16 @@ def exam_submit(request, exam_id):
 
     attempt_number = ExamAttempt.objects.filter(student=student, exam=exam).count() + 1
 
+    now = timezone.now()
+    started_at = now - timezone.timedelta(seconds=max(0, time_taken_seconds))
+
     # Create ExamAttempt record
     attempt = ExamAttempt.objects.create(
         exam=exam,
         student=student,
         attempt_number=attempt_number,
-        completed_at=timezone.now(),
+        started_at=started_at,
+        completed_at=now,
         time_taken_seconds=time_taken_seconds,
         total_questions=total_questions,
         is_completed=True,

@@ -1,0 +1,19 @@
+# Arohan Academy Mock Test Portal - Requirements
+# Core Web Framework
+Django>=5.0,<6.1
+
+# Admin & UI Theme
+django-jazzmin>=3.0.0
+
+# PDF & Excel Generation Engines
+reportlab>=4.0.0
+openpyxl>=3.1.0
+pypdf>=5.0.0
+
+# Image Processing (Required for Django ImageField & Logo handling)
+Pillow>=10.0.0
+
+# Production Deployment (WSGI & Static Files)
+gunicorn>=21.0.0
+whitenoise>=6.6.0
+python-dotenv>=1.0.0

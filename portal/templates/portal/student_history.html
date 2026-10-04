@@ -104,9 +104,14 @@
                             <span><i class="fa-solid fa-calendar me-1"></i>{{ att.started_at|date:"d M Y, h:i A" }}</span>
                         </div>
 
-                        <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-outline-primary btn-sm w-100 fw-bold py-2">
-                            <i class="fa-solid fa-file-invoice me-1"></i> View Full Verification Report &rarr;
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'portal:attempt_result_pdf' att.id %}" class="btn btn-outline-danger btn-sm fw-bold py-2 px-3" title="Download PDF" download>
+                                <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                            </a>
+                            <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold py-2">
+                                <i class="fa-solid fa-file-invoice me-1"></i> Full Report &rarr;
+                            </a>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -152,9 +157,14 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-sm btn-outline-primary fw-semibold">
-                                        View Report &rarr;
-                                    </a>
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{% url 'portal:attempt_result_pdf' att.id %}" class="btn btn-sm btn-outline-danger fw-semibold" title="Download PDF" download>
+                                            <i class="fa-solid fa-file-pdf"></i> PDF
+                                        </a>
+                                        <a href="{% url 'portal:exam_result' att.id %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                                            View Report &rarr;
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

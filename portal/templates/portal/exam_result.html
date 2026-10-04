@@ -757,41 +757,32 @@
             <i class="fa-solid fa-house me-1"></i> Home
         </a>
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <!-- Smart Print / PDF Action Group -->
+            <!-- Official PDF Download & Print Action Group -->
             <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-dark fw-bold d-flex align-items-center gap-1.5 shadow-sm" id="btnMainPrintPdf">
-                    <i class="fa-solid fa-file-pdf text-danger" id="mainPrintPdfIcon"></i>
-                    <span id="mainPrintPdfLabel">Print / PDF Report</span>
-                </button>
-                <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownPrintPdfSplit">
+                <a href="{% url 'portal:attempt_result_pdf' attempt.id %}" class="btn btn-danger fw-bold d-flex align-items-center gap-2 shadow-sm" id="btnMainDownloadPdf" download>
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Download PDF Report</span>
+                </a>
+                <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownPrintPdfSplit">
                     <span class="visually-hidden">Toggle PDF Options</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="border-radius: 12px; font-size: 0.85rem;">
                     <li>
-                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionDownloadPdfA5">
+                        <a href="{% url 'portal:attempt_result_pdf' attempt.id %}" class="dropdown-item py-2 d-flex align-items-center gap-2" download>
                             <i class="fa-solid fa-file-arrow-down text-danger"></i>
                             <div>
-                                <div class="fw-bold text-dark">Download Continuous PDF Report</div>
-                                <small class="text-muted" style="font-size: 0.72rem;">Single continuous page, auto-sized to questions</small>
+                                <div class="fw-bold text-dark">Download PDF Report</div>
+                                <small class="text-muted" style="font-size: 0.72rem;">Complete official scorecard with questions &amp; solutions</small>
                             </div>
-                        </button>
-                    </li>
-                    <li>
-                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionDownloadPdfA4">
-                            <i class="fa-solid fa-file-pdf text-primary"></i>
-                            <div>
-                                <div class="fw-bold text-dark">Download Standard Width PDF</div>
-                                <small class="text-muted" style="font-size: 0.72rem;">Full-width continuous scorecard</small>
-                            </div>
-                        </button>
+                        </a>
                     </li>
                     <li><hr class="dropdown-divider my-1"></li>
                     <li>
-                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" id="actionPrintDocument">
+                        <button type="button" class="dropdown-item py-2 d-flex align-items-center gap-2" onclick="window.print()">
                             <i class="fa-solid fa-print text-secondary"></i>
                             <div>
                                 <div class="fw-bold text-dark">Print Report</div>
-                                <small class="text-muted" style="font-size: 0.72rem;">Open system print dialog</small>
+                                <small class="text-muted" style="font-size: 0.72rem;">Open system print dialog / save as PDF</small>
                             </div>
                         </button>
                     </li>
@@ -1156,10 +1147,14 @@
     </div>
 
     <!-- Bottom Actions for Mobile -->
+    <!-- Bottom Actions for Mobile & Desktop -->
     <div class="card-custom p-4 text-center no-print mb-4">
         <h5 class="fw-bold mb-2">Practice again to master this test</h5>
-        <p class="text-muted small mb-3">You can retake this mock test as many times as you like. There are no attempt restrictions!</p>
+        <p class="text-muted small mb-3">You can download your official PDF scorecard or retake this mock test anytime to boost your score.</p>
         <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <a href="{% url 'portal:attempt_result_pdf' attempt.id %}" class="btn btn-danger btn-touch-lg px-4 shadow-sm" download>
+                <i class="fa-solid fa-file-pdf me-2"></i> Download PDF Report
+            </a>
             <a href="{% url 'portal:exam_instruction' exam.id %}?student_id={{ student.id }}" class="btn btn-arohan-primary btn-touch-lg px-4 shadow">
                 <i class="fa-solid fa-rotate-right me-2"></i> Retake This Exam Now
             </a>
@@ -1169,184 +1164,9 @@
         </div>
     </div>
 
-    <!-- PDF Generation Floating Feedback Toast (No-Print) -->
-    <div id="pdfProgressToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 p-3 bg-dark text-white rounded-4 shadow-lg d-none align-items-center gap-3 no-print" style="z-index: 999999; max-width: 90%; border: 1.5px solid rgba(255,255,255,0.25); backdrop-filter: blur(10px);">
-        <div class="spinner-border text-warning spinner-border-sm" role="status"></div>
-        <div class="small fw-bold" id="pdfToastText">Preparing high-quality PDF report...</div>
-    </div>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- html2pdf bundle for high fidelity client-side PDF download -->
-<script src="{% static 'js/html2pdf.bundle.min.js' %}"></script>
-<script>
-(function () {
-    // Ensure html2pdf is available; if not, fallback to CDN
-    if (typeof html2pdf === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        document.head.appendChild(script);
-    }
-
-    // Detect whether user is on a mobile device or small touch screen
-    function isMobileDevice() {
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-        const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        const isNarrowScreen = window.innerWidth <= 768;
-        return isMobileUa || (isTouchScreen && isNarrowScreen);
-    }
-
-    const btnMainPrintPdf = document.getElementById('btnMainPrintPdf');
-    const mainPrintPdfIcon = document.getElementById('mainPrintPdfIcon');
-    const mainPrintPdfLabel = document.getElementById('mainPrintPdfLabel');
-    const actionDownloadPdfA5 = document.getElementById('actionDownloadPdfA5');
-    const actionDownloadPdfA4 = document.getElementById('actionDownloadPdfA4');
-    const actionPrintDocument = document.getElementById('actionPrintDocument');
-    const pdfToast = document.getElementById('pdfProgressToast');
-    const pdfToastText = document.getElementById('pdfToastText');
-
-    const isMobile = isMobileDevice();
-
-    // Adjust button label & icon on mobile so it clearly states "Download PDF"
-    if (isMobile && mainPrintPdfLabel && mainPrintPdfIcon) {
-        mainPrintPdfLabel.textContent = 'Download PDF Report';
-        mainPrintPdfIcon.className = 'fa-solid fa-file-arrow-down text-danger';
-    }
-
-    function showToast(msg) {
-        if (pdfToast) {
-            if (pdfToastText) pdfToastText.textContent = msg || 'Preparing PDF report...';
-            pdfToast.classList.remove('d-none');
-            pdfToast.classList.add('d-flex');
-        }
-    }
-
-    function hideToast() {
-        if (pdfToast) {
-            pdfToast.classList.remove('d-flex');
-            pdfToast.classList.add('d-none');
-        }
-    }
-
-    // High fidelity continuous PDF generation and download
-    function executeDownloadPdf(targetFormat) {
-        showToast('Generating continuous PDF report... Please wait');
-
-        const element = document.getElementById('reportPrintArea');
-        if (!element) {
-            hideToast();
-            window.print();
-            return;
-        }
-
-        // Apply compact mode class before taking snapshot
-        element.classList.add('report-compact-mode');
-
-        // Hide interactive non-printable elements during PDF rendering
-        const noPrintElements = document.querySelectorAll('.no-print');
-        noPrintElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
-
-        const rawExamTitle = "{{ exam.title|slugify }}";
-        const rawStudentName = "{{ student.name|slugify }}";
-        const filename = `${rawExamTitle || 'Mock_Test'}_${rawStudentName || 'Student'}_Report.pdf`;
-
-        const cleanup = () => {
-            element.classList.remove('report-compact-mode');
-            noPrintElements.forEach(el => el.style.removeProperty('display'));
-            hideToast();
-        };
-
-        const runGeneration = () => {
-            if (typeof html2pdf === 'undefined') {
-                cleanup();
-                window.print();
-                return;
-            }
-
-            // Measure the exact rendered dimensions of the report content
-            const elementWidthPx = element.offsetWidth || 680;
-            const elementHeightPx = element.scrollHeight || element.offsetHeight;
-
-            // Target page width: 148mm (compact mobile width) or 210mm (if standard A4 requested)
-            const targetWidthMm = (targetFormat && targetFormat.toLowerCase() === 'a4') ? 210 : 148;
-
-            // Calculate proportional height in millimeters based on the exact DOM height
-            // with a 10mm padding buffer so the bottom question/footer has clean breathing room
-            const targetHeightMm = Math.ceil((elementHeightPx / elementWidthPx) * targetWidthMm) + 10;
-
-            const opt = {
-                margin: [4, 5, 4, 5],
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff',
-                    windowWidth: elementWidthPx
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: [targetWidthMm, targetHeightMm],
-                    orientation: 'portrait'
-                },
-                pagebreak: {
-                    mode: [] // ZERO page breaks: entire document fits into one continuous, auto-sized page!
-                }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                cleanup();
-            }).catch(err => {
-                console.warn('html2pdf generation error, falling back to print:', err);
-                cleanup();
-                window.print();
-            });
-        };
-
-        // Allow DOM to apply compact styles before taking snapshot
-        setTimeout(runGeneration, 150);
-    }
-
-    // Main button click handler:
-    // If mobile: direct download compact A5 PDF. If desktop: open print dialog.
-    if (btnMainPrintPdf) {
-        btnMainPrintPdf.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (isMobile) {
-                executeDownloadPdf('a5');
-            } else {
-                window.print();
-            }
-        });
-    }
-
-    // Dropdown: Explicit "Download Compact PDF (A5)" action
-    if (actionDownloadPdfA5) {
-        actionDownloadPdfA5.addEventListener('click', function (e) {
-            e.preventDefault();
-            executeDownloadPdf('a5');
-        });
-    }
-
-    // Dropdown: Explicit "Download Standard PDF (A4)" action
-    if (actionDownloadPdfA4) {
-        actionDownloadPdfA4.addEventListener('click', function (e) {
-            e.preventDefault();
-            executeDownloadPdf('a4');
-        });
-    }
-
-    // Dropdown: Explicit "Print" action
-    if (actionPrintDocument) {
-        actionPrintDocument.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.print();
-        });
-    }
-})();
-</script>
+<!-- Official server-side PDF generator handles downloads cleanly without third-party canvas bugs -->
 {% endblock %}

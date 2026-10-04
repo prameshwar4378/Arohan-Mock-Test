@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from decimal import Decimal
+from django.utils import timezone
 import json
 
 from portal.models import AcademicClass, Subject, Student, Exam, Question, ExamAttempt, AttemptAnswer
@@ -808,3 +809,134 @@ class MockTestPortalTests(TestCase):
         self.assertContains(response, 'id="sidebarBackdrop"')
         self.assertContains(response, 'id="sidebarToggleBtn"')
         self.assertContains(response, 'sidebar-header')
+
+    def test_exam_attempt_result_pdf_download_and_content(self):
+        """
+        Verify that attempting an exam and clicking Download PDF Report produces
+        a valid, non-blank server-side PDF with complete scorecard, questions, options,
+        and official school branding.
+        """
+        import io
+        import pypdf
+
+        # 1. Create a completed exam attempt with answers
+        attempt = ExamAttempt.objects.create(
+            exam=self.exam,
+            student=self.student,
+            attempt_number=1,
+            completed_at=timezone.now(),
+            total_questions=2,
+            correct_answers=1,
+            wrong_answers=1,
+            unattempted_answers=0,
+            score_obtained=Decimal('1.50'),
+            max_score=Decimal('4.00'),
+            percentage=Decimal('37.50'),
+            is_passed=False,
+            is_completed=True,
+            time_taken_seconds=95
+        )
+        AttemptAnswer.objects.create(
+            attempt=attempt,
+            question=self.q1,
+            selected_option='A',
+            is_correct=True,
+            marks_awarded=Decimal('2.00')
+        )
+        AttemptAnswer.objects.create(
+            attempt=attempt,
+            question=self.q2,
+            selected_option='C',
+            is_correct=False,
+            marks_awarded=Decimal('-0.50')
+        )
+
+        # 2. Request PDF download endpoint
+        pdf_url = reverse('portal:attempt_result_pdf', args=[attempt.id])
+        response = self.client.get(pdf_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertTrue(response.content.startswith(b'%PDF'))
+        self.assertIn('attachment;', response['Content-Disposition'])
+        self.assertIn('.pdf', response['Content-Disposition'])
+        self.assertGreater(len(response.content), 20000, "PDF byte length must be substantial (not empty/blank)")
+
+        # 3. Parse PDF with pypdf and verify text content across pages
+        reader = pypdf.PdfReader(io.BytesIO(response.content))
+        self.assertGreaterEqual(len(reader.pages), 1)
+
+        full_extracted_text = ""
+        for page in reader.pages:
+            full_extracted_text += page.extract_text() or ""
+
+        # Verify school branding
+        self.assertIn("Arohan Academy English School", full_extracted_text)
+        # Verify student & exam info
+        self.assertIn("Rohan Sharma", full_extracted_text)
+        self.assertIn("Science Unit Test 1", full_extracted_text)
+        self.assertIn("ARO-001", full_extracted_text)
+        # Verify scorecard details
+        self.assertIn("1.50 / 4.00", full_extracted_text)
+        self.assertIn("37.50%", full_extracted_text)
+        self.assertIn("FAILED", full_extracted_text)
+        # Verify questions and options
+        self.assertIn("What is the chemical formula of water?", full_extracted_text)
+        self.assertIn("H2O", full_extracted_text)
+        self.assertIn("Which planet is the Red Planet?", full_extracted_text)
+        self.assertIn("Mars", full_extracted_text)
+
+    def test_exam_result_view_has_server_side_pdf_download_links(self):
+        """
+        Verify that the student exam result page links directly to the server-side PDF generator
+        and avoids brittle html2pdf client-side canvas capture.
+        """
+        attempt = ExamAttempt.objects.create(
+            exam=self.exam,
+            student=self.student,
+            attempt_number=1,
+            total_questions=2,
+            correct_answers=2,
+            wrong_answers=0,
+            unattempted_answers=0,
+            score_obtained=Decimal('4.00'),
+            max_score=Decimal('4.00'),
+            percentage=Decimal('100.00'),
+            is_passed=True,
+            is_completed=True,
+            time_taken_seconds=60
+        )
+        url = reverse('portal:exam_result', args=[attempt.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        expected_pdf_url = reverse('portal:attempt_result_pdf', args=[attempt.id])
+        self.assertContains(response, f'href="{expected_pdf_url}"')
+        self.assertContains(response, 'Download PDF Report')
+        self.assertNotContains(response, 'html2pdf.bundle.min.js')
+
+    def test_confirm_delete_with_raw_cancel_url(self):
+        """Verify confirm_delete template supports raw URL path in cancel_url without NoReverseMatch."""
+        self.client.force_login(self.superuser)
+        url = reverse('portal:supervisor_student_delete', args=[self.student.id]) + '?next=/supervisor/classes/1/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="/supervisor/classes/1/"')
+
+    def test_exam_submit_records_accurate_started_at(self):
+        """Verify that ExamAttempt.started_at is calculated from completed_at minus time_taken_seconds."""
+        submit_url = reverse('portal:exam_submit', args=[self.exam.id])
+        post_data = {
+            'student_id': self.student.id,
+            'time_taken_seconds': 300,
+            f'question_{self.q1.id}': 'A',
+            f'question_{self.q2.id}': 'B',
+        }
+        response = self.client.post(submit_url, post_data)
+        self.assertEqual(response.status_code, 302)
+
+        attempt = ExamAttempt.objects.filter(student=self.student, exam=self.exam).last()
+        self.assertIsNotNone(attempt)
+        self.assertEqual(attempt.time_taken_seconds, 300)
+        diff_seconds = (attempt.completed_at - attempt.started_at).total_seconds()
+        self.assertAlmostEqual(diff_seconds, 300, delta=2)
